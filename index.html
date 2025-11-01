@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AcuLeadFinder AI™ — Lead Finder & Outreach</title>
+  <meta name="description" content="AcuLeadFinder AI™ — find local acupuncture leads and send compliant outreach." />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b1117; --panel:#111827; --muted:#94a3b8; --text:#e5e7eb;
+      --primary:#22c55e; --primary-2:#16a34a; --ring:rgba(34,197,94,.25);
+      --card:#0f172a; --border:#1f2937; --warn:#f59e0b; --danger:#ef4444;
+      --ok:#10b981; --link:#60a5fa;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:linear-gradient(180deg, #0b1117 0%, #0a0f14 100%); color:var(--text);
+    }
+    a{color:var(--link); text-decoration:none}
+    .shell{max-width:1200px; margin:0 auto; padding:24px}
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px;
+    }
+    .brand{display:flex; align-items:center; gap:14px}
+    .logo{width:40px;height:40px;border-radius:12px;background:
+      radial-gradient(100% 100% at 0% 0%, #34d399 0%, #22c55e 60%, #0ea5e9 100%);
+      box-shadow:0 8px 24px rgba(34,197,94,.35), inset 0 0 18px rgba(255,255,255,.15);
+    }
+    .title h1{font-size:20px;margin:0;font-weight:700}
+    .title .sub{font-size:12px;color:var(--muted)}
+    .status-pill{
+      display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px;
+      background:#0f172a; border:1px solid var(--border); font-size:12px;
+    }
+    .dot{width:8px;height:8px;border-radius:50%; background:var(--muted)}
+    .dot.ok{background:var(--ok); box-shadow:0 0 0 6px var(--ring)}
+    nav{
+      display:flex; gap:8px; flex-wrap:wrap;
+      background:#0f172a; border:1px solid var(--border); padding:6px; border-radius:12px;
+    }
+    .tab{
+      padding:10px 14px; border-radius:10px; font-weight:600; font-size:14px; cursor:pointer;
+      color:var(--muted);
+    }
+    .tab.active{background:#111827; color:var(--text); border:1px solid var(--border)}
+    .grid{display:grid; grid-template-columns:1.2fr .8fr; gap:16px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} header{flex-direction:column; align-items:flex-start} }
+    .card{
+      background:#0f172a; border:1px solid var(--border); border-radius:16px; padding:16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.02);
+    }
+    .card h2{margin:0 0 10px 0; font-size:16px}
+    .help{font-size:12px; color:var(--muted)}
+    .row{display:flex; gap:12px; flex-wrap:wrap}
+    .stat{
+      flex:1; min-width:180px; background:#0b1220; border:1px solid var(--border); border-radius:12px; padding:14px;
+    }
+    .stat .label{color:var(--muted); font-size:12px}
+    .stat .value{font-size:22px; font-weight:700; margin-top:6px}
+    label{display:block; font-size:13px; color:var(--muted); margin:10px 0 6px}
+    input,textarea,select{
+      width:100%; background:#0b1220; color:var(--text); border:1px solid var(--border);
+      border-radius:10px; padding:10px 12px; font-size:14px; outline:none;
+    }
+    input:focus,textarea:focus,select:focus{border-color:var(--primary); box-shadow:0 0 0 4px var(--ring)}
+    textarea{min-height:110px; resize:vertical}
+    .btn{
+      display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:10px; border:1px solid var(--border);
+      background:#0b1220; color:var(--text); cursor:pointer; font-weight:600;
+    }
+    .btn.primary{background:var(--primary); border-color:var(--primary-2); color:#07110a}
+    .btn.primary:hover{filter:brightness(1.05)}
+    .btn.ghost:hover{background:#0f172a}
+    .btn-row{display:flex; gap:10px; flex-wrap:wrap}
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:10px; border-bottom:1px solid var(--border)}
+    th{color:var(--muted); text-align:left}
+    .pill{display:inline-flex; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); color:var(--muted)}
+    .toast{
+      position:fixed; right:16px; bottom:16px; background:#0b1220; border:1px solid var(--border);
+      color:var(--text); padding:12px 14px; border-radius:10px; display:none; z-index:9999; min-width:240px;
+      box-shadow:0 18px 60px rgba(0,0,0,.4);
+    }
+    .toast.show{display:block; animation:pop .25s ease-out}
+    @keyframes pop{from{transform:translateY(6px); opacity:.3} to{transform:none; opacity:1}}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .small{font-size:12px; color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="title">
+          <h1>AcuLeadFinder AI™</h1>
+          <div class="sub">Local lead discovery & compliant outreach for acupuncture clinics</div>
+        </div>
+      </div>
+      <div class="row" style="gap:10px">
+        <div class="status-pill" id="health-pill" title="API health">
+          <span class="dot" id="health-dot"></span> <span id="health-text">Checking API…</span>
+        </div>
+        <nav>
+          <div class="tab active" data-tab="dashboard">Dashboard</div>
+          <div class="tab" data-tab="outreach">Outreach</div>
+          <div class="tab" data-tab="settings">Settings</div>
+        </nav>
+      </div>
+    </header>
+
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard">
+      <div class="grid">
+        <div class="card">
+          <h2>Today’s Snapshot</h2>
+          <div class="row">
+            <div class="stat">
+              <div class="label">Leads found</div>
+              <div class="value" id="stat-leads">0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Emails sent</div>
+              <div class="value" id="stat-sent">0 / 50</div>
+            </div>
+            <div class="stat">
+              <div class="label">Open rate</div>
+              <div class="value" id="stat-open">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Booked this week</div>
+              <div class="value" id="stat-booked">—</div>
+            </div>
+          </div>
+          <p class="help" style="margin-top:6px">Metrics are placeholders until your discovery jobs and email provider are connected.</p>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn primary" id="btn-run-discovery">Run Discovery (stub)</button>
+            <button class="btn ghost" id="btn-refresh">Refresh</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>API Endpoints</h2>
+          <table>
+            <thead><tr><th>Endpoint</th><th>Method</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono">/api/health</span></td><td>GET</td><td><span class="pill" id="ep-health">—</span></td></tr>
+              <tr><td><span class="mono">/api/config</span></td><td>GET/PUT</td><td><span class="pill" id="ep-config">—</span></td></tr>
+              <tr><td><span class="mono">/api/outreach</span></td><td>POST</td><td><span class="pill" id="ep-outreach">—</span></td></tr>
+            </tbody>
+          </table>
+          <p class="small" style="margin-top:8px">All calls are same-origin (<span class="mono">/api/*</span>). No CORS needed on Vercel.</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>Recent Qualified Leads</h2>
+        <table>
+          <thead><tr><th>Name</th><th>Source</th><th>Query</th><th>Location</th><th>Status</th></tr></thead>
+          <tbody id="leads-body">
+            <tr><td colspan="5" class="small">Discovery not wired yet. Click “Run Discovery (stub)” to simulate results.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- OUTREACH -->
+    <section id="tab-outreach" style="display:none">
+      <div class="grid">
+        <div class="card">
+          <h2>Quick Outreach</h2>
+          <label for="to">Recipients (comma separated)</label>
+          <input id="to" placeholder="person@example.com, another@domain.com" />
+          <div class="row">
+            <div style="flex:1">
+              <label for="name_hint">Name hint</label>
+              <input id="name_hint" placeholder="Sarah" />
+            </div>
+            <div style="flex:1">
+              <label for="condition">Condition (context)</label>
+              <input id="condition" placeholder="back pain" />
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn" id="btn-preview">Preview only</button>
+            <button class="btn primary" id="btn-send">Send</button>
+          </div>
+          <p class="help">Max 50 recipients per send. Real sending requires `SENDGRID_API_KEY` later.</p>
+          <pre id="preview-box" class="mono" style="background:#0b1220;border:1px solid var(--border);border-radius:12px;padding:12px;overflow:auto;margin-top:12px;display:none"></pre>
+        </div>
+
+        <div class="card">
+          <h2>From Identity</h2>
+          <div class="row">
+            <div style="flex:1">
+              <label>From name</label>
+              <input id="from_name" value="Dr. Farah Behroozi, L.Ac." disabled />
+            </div>
+            <div style="flex:1">
+              <label>From email</label>
+              <input id="from_email" value="info@avicennamedicine.com" disabled />
+            </div>
+          </div>
+          <p class="help">These are controlled server-side for deliverability. We’ll set them in API env vars.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" style="display:none">
+      <div class="grid">
+        <div class="card">
+          <h2>Clinic Profile</h2>
+          <label>Clinic name</label>
+          <input id="clinic_name" placeholder="Dr. Farah Behroozi, L.Ac." />
+          <label>Address</label>
+          <input id="clinic_address" placeholder="10220 River Rd #206, Potomac, MD 20854" />
+          <div class="row">
+            <div style="flex:1">
+              <label>Radius (miles)</label>
+              <input id="radius" type="number" min="1" value="30" />
+            </div>
+            <div style="flex:1">
+              <label>Notification email</label>
+              <input id="notify_email" placeholder="info@avicennamedicine.com" />
+            </div>
+          </div>
+
+          <label>Search terms (one per line)</label>
+          <textarea id="terms" placeholder="Acupuncture near me&#10;Chinese medicine&#10;holistic healing&#10;back pain acupuncture"></textarea>
+
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn" id="btn-load-config">Load saved</button>
+            <button class="btn primary" id="btn-save-config">Save settings</button>
+          </div>
+          <p class="help">Saves to <span class="mono">/api/config</span>. You can seed defaults via curl as well.</p>
+        </div>
+
+        <div class="card">
+          <h2>Email Provider (Server-Side)</h2>
+          <p class="help">You’ll add these later as API environment variables (same project on Vercel):</p>
+          <ul class="small">
+            <li><span class="mono">SENDGRID_API_KEY</span></li>
+            <li><span class="mono">SMTP_FROM_EMAIL</span> (e.g., info@avicennamedicine.com)</li>
+            <li><span class="mono">SMTP_FROM_NAME</span> (e.g., Dr. Farah Behroozi, L.Ac.)</li>
+          </ul>
+          <p class="small">Once set, the “Send” button will send real mail. Until then, use “Preview only”.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---------- helpers ----------
+    const $ = (s) => document.querySelector(s);
+    const showToast = (msg, ok=true) => {
+      const t = $('#toast');
+      t.textContent = msg;
+      t.style.borderColor = ok ? 'var(--primary)' : 'var(--danger)';
+      t.classList.add('show');
+      clearTimeout(showToast._h);
+      showToast._h = setTimeout(()=>t.classList.remove('show'), 3500);
+    };
+    const setPill = (el, text) => { el.textContent = text; };
+
+    // ---------- tabs ----------
+    document.querySelectorAll('.tab').forEach(tab=>{
+      tab.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        const name = tab.dataset.tab;
+        ['dashboard','outreach','settings'].forEach(id=>{
+          $('#tab-'+id).style.display = (id===name)?'block':'none';
+        });
+      });
+    });
+
+    // ---------- API health ----------
+    async function checkHealth() {
+      const dot = $('#health-dot');
+      const text = $('#health-text');
+      try{
+        const r = await fetch('/api/health', { cache:'no-store' });
+        if(!r.ok) throw new Error(r.status);
+        const j = await r.json();
+        dot.classList.add('ok');
+        text.textContent = 'API Live';
+        setPill($('#ep-health'),'OK');
+        return j;
+      } catch(e){
+        dot.classList.remove('ok');
+        text.textContent = 'API Not Reachable';
+        setPill($('#ep-health'),'—');
+      }
+    }
+
+    // ---------- Config load/save ----------
+    function textToList(text){
+      return (text || '').split('\n').map(s=>s.trim()).filter(Boolean);
+    }
+    function listToText(list){
+      return (list || []).join('\n');
+    }
+    async function loadConfig(){
+      try{
+        const r = await fetch('/api/config', { cache:'no-store' });
+        if(!r.ok) throw new Error(r.status);
+        const j = await r.json();
+        const p = (j.payload || j || {});
+        $('#clinic_name').value = p?.business?.name || 'Dr. Farah Behroozi, L.Ac.';
+        $('#clinic_address').value = p?.business?.address || '10220 River Rd #206, Potomac, MD 20854';
+        $('#notify_email').value = p?.business?.email || 'info@avicennamedicine.com';
+        $('#radius').value = p?.radius_miles ?? 30;
+        $('#terms').value = listToText(p?.search_terms || [
+          'Acupuncture near me','Chinese medicine','natural pain relief',
+          'holistic healing','back pain acupuncture','facial acupuncture',
+          'stress relief acupuncture','Dr. Farah Behroozi'
+        ]);
+        setPill($('#ep-config'),'OK');
+        showToast('Loaded saved settings');
+      }catch(e){
+        setPill($('#ep-config'),'—');
+        showToast('No saved config yet (that’s OK).', true);
+      }
+    }
+    async function saveConfig(){
+      const payload = {
+        business:{
+          name: $('#clinic_name').value.trim(),
+          address: $('#clinic_address').value.trim(),
+          email: $('#notify_email').value.trim()
+        },
+        radius_miles: Number($('#radius').value) || 30,
+        search_terms: textToList($('#terms').value)
+      };
+      const r = await fetch('/api/config', {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if(r.ok){ setPill($('#ep-config'),'OK'); showToast('Settings saved'); }
+      else { showToast('Failed to save settings', false); }
+    }
+
+    // ---------- Outreach ----------
+    async function outreach(preview=false){
+      const to = $('#to').value.split(',').map(s=>s.trim()).filter(Boolean);
+      if(!to.length){ showToast('Add at least one recipient', false); return; }
+      const body = {
+        recipients: to,
+        name_hint: $('#name_hint').value.trim() || 'there',
+        condition: $('#condition').value.trim() || 'your needs',
+        preview_only: preview
+      };
+      const r = await fetch('/api/outreach', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      const j = await r.json().catch(()=> ({}));
+      if(preview){
+        $('#preview-box').style.display='block';
+        $('#preview-box').textContent = JSON.stringify(j, null, 2);
+        setPill($('#ep-outreach'), r.ok ? 'OK' : '—');
+        showToast(r.ok ? 'Preview generated' : ('Error: '+(j?.message || r.status)), r.ok);
+      }else{
+        if(r.ok){ showToast(`Sent to ${j.count||to.length} recipient(s)`); setPill($('#ep-outreach'),'OK'); }
+        else{ showToast(`Send failed: ${j?.message || r.status}`, false); }
+      }
+    }
+
+    // ---------- Discovery (stub) ----------
+    function simulateLeads(){
+      const tbody = $('#leads-body');
+      tbody.innerHTML = '';
+      const rows = [
+        ['Sarah Johnson','Reddit','"acupuncture for back pain"','Rockville, MD (4.2mi)','Qualified'],
+        ['Michael Chen','Google','"chinese medicine potomac"','Potomac, MD (1.5mi)','Contacted'],
+        ['Jennifer Williams','Yelp','"holistic healing near me"','Bethesda, MD (5.7mi)','Qualified'],
+        ['Robert Kim','Forum','"natural pain relief"','North Bethesda, MD (6.1mi)','Pending'],
+        ['Amanda Rodriguez','X (Twitter)','"facial acupuncture"','McLean, VA (12.3mi)','Qualified'],
+      ];
+      rows.forEach(r=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><span class="pill">${r[4]}</span></td>`;
+        tbody.appendChild(tr);
+      });
+      $('#stat-leads').textContent = String(rows.length);
+      showToast('Discovery simulated (stub)');
+    }
+
+    // ---------- events ----------
+    $('#btn-refresh').addEventListener('click', ()=>{ checkHealth(); loadConfig(); });
+    $('#btn-run-discovery').addEventListener('click', simulateLeads);
+    $('#btn-load-config').addEventListener('click', loadConfig);
+    $('#btn-save-config').addEventListener('click', saveConfig);
+    $('#btn-preview').addEventListener('click', ()=>outreach(true));
+    $('#btn-send').addEventListener('click', ()=>outreach(false));
+
+    // initial
+    checkHealth();
+    loadConfig();
+  </script>
+</body>
+</html>
