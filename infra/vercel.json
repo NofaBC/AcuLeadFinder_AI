@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "functions": {
+    "services/agent-runner/main.py": {
+      "runtime": "python3.11"
+    }
+  },
+  "routes": [
+    {
+      "src": "/health",
+      "dest": "services/agent-runner/main.py"
+    },
+    {
+      "src": "/",
+      "dest": "services/agent-runner/main.py"
+    },
+    {
+      "src": "/jobs(?:/.*)?",
+      "dest": "services/agent-runner/main.py"
+    },
+    {
+      "src": "/drafts(?:/.*)?",
+      "dest": "services/agent-runner/main.py"
+    },
+    {
+      "src": "/webhooks/sendgrid",
+      "dest": "services/agent-runner/main.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "services/agent-runner/main.py"
+    }
+  ]
+}
