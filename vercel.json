@@ -2,19 +2,14 @@
   "version": 3,
   "builds": [
     {
-      "src": "services/agent-runner/main.py",
+      "src": "api/index.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "services/agent-runner/main.py"
+      "dest": "api/index.py"
     }
-  ],
-  "functions": {
-    "services/agent-runner/main.py": {
-      "runtime": "python3.11"
-    }
-  }
+  ]
 }
