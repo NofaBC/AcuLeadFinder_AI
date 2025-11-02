@@ -4,7 +4,7 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Autonomous LeadGen Agent API", "version": "v1"}
 
 @app.get("/health")
 async def health():
