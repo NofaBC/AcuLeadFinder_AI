@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AcuLeadFinder AI — Control Panel (M1)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{--bg:#0b1220;--card:#121a2b;--text:#e8eefc;--muted:#9bb0d6;--accent:#7cc4ff;--ok:#53d769;--warn:#ffcc00;--bad:#ff3b30}
+    body{margin:0;background:linear-gradient(180deg,#0b1220,#0a0f1e);font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto;color:var(--text)}
+    header{padding:20px 16px;border-bottom:1px solid #1e2a44}
+    h1{margin:0;font-size:18px}
+    .wrap{max-width:1100px;margin:18px auto;padding:0 16px;display:grid;gap:16px}
+    .card{background:var(--card);border:1px solid #1e2a44;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card h2{margin:0;padding:14px 16px;border-bottom:1px solid #1e2a44;font-size:16px}
+    .card .content{padding:14px 16px}
+    label{display:block;margin:8px 0 4px;color:var(--muted);font-size:12px}
+    input,select,button,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #283659;background:#0e172a;color:var(--text)}
+    button{cursor:pointer;border:1px solid #2d8fff}
+    button.primary{background:#1a66ff;border-color:#1a66ff}
+    .row{display:grid;gap:12px}
+    @media(min-width:720px){.row{grid-template-columns:repeat(2,1fr)}}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #1e2a44;vertical-align:top}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#0e1a33;border:1px solid #243a6b;color:var(--muted);font-size:12px}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .muted{color:var(--muted)}
+    .grid-3{display:grid;gap:16px}
+    @media(min-width:960px){.grid-3{grid-template-columns: 1.3fr .9fr 1.2fr}}
+    .foot{padding:10px 16px;color:#7b8fb9;font-size:12px;border-top:1px solid #1e2a44}
+    .hint{font-size:12px;color:#89a3d6}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧠 AcuLeadFinder AI — Control Panel (M1)</h1>
+    <div class="hint">Backend: create campaigns → start jobs → review drafts → approve/send.</div>
+  </header>
+
+  <div class="wrap grid-3">
+    <section class="card">
+      <h2>1) Campaign</h2>
+      <div class="content">
+        <label for="preset">Preset</label>
+        <select id="preset">
+          <option value="acu">AcuLeadFinder – Behroozi</option>
+          <option value="apl">APLeadFinder – Default</option>
+        </select>
+        <label for="model">Model</label>
+        <input id="model" placeholder="gpt-5-mini" value="gpt-5-mini" />
+        <label for="sendcap">Send cap per run</label>
+        <input id="sendcap" type="number" value="20" />
+        <button class="primary" id="createCampaignBtn">Create / Update Campaign</button>
+        <div id="campaignOut" class="muted" style="margin-top:8px"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2) Job</h2>
+      <div class="content">
+        <label for="campaignId">Campaign ID</label>
+        <input id="campaignId" placeholder="(from step 1)" />
+        <label for="planned">Planned drafts count</label>
+        <input id="planned" type="number" value="10" />
+        <button class="primary" id="startJobBtn">Start Job</button>
+        <div id="jobOut" class="muted" style="margin-top:8px"></div>
+        <hr style="border:0;border-top:1px solid #1e2a44;margin:14px 0" />
+        <label for="jobId">Job ID</label>
+        <input id="jobId" placeholder="(returned above)" />
+        <div class="actions" style="margin-top:8px">
+          <button id="refreshDraftsBtn">Refresh Drafts</button>
+          <button id="sendApprovedBtn">Send Approved (batch)</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3) Status</h2>
+      <div class="content">
+        <div id="status" class="muted">Idle</div>
+      </div>
+      <div class="foot">Tip: keep daily caps low while warming up your domain.</div>
+    </section>
+  </div>
+
+  <section class="wrap card" style="margin-top:16px">
+    <h2>Drafts</h2>
+    <div class="content">
+      <table>
+        <thead>
+          <tr><th>Lead</th><th>Subject</th><th>Body</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="draftsTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    // —— CONFIG ————————————————————————————————
+    const API_BASE = '/'; // same origin. If backend is elsewhere, set like 'https://api.yourdomain.com/'
+    const HEADERS = {'Content-Type':'application/json'}; // add {'X-API-Key': '...'} if you enabled API key auth
+
+    // —— HELPERS ————————————————————————————————
+    const $ = (id) => document.getElementById(id);
+    const setStatus = (msg) => $('status').textContent = msg;
+
+    // —— ACTIONS ————————————————————————————————
+    async function createCampaign(){
+      const preset = $('preset').value;
+      const model = $('model').value || 'gpt-5-mini';
+      const sendCapPerRun = parseInt($('sendcap').value||'20',10);
+
+      // Let backend load preset by name
+      const res = await fetch(API_BASE + 'campaigns', {
+        method:'POST', headers: HEADERS,
+        body: JSON.stringify({ preset, model, sendCapPerRun })
+      });
+      const data = await res.json();
+      $('campaignOut').textContent = 'campaignId: ' + (data.campaignId || JSON.stringify(data));
+      setStatus('Campaign saved.');
+    }
+
+    async function startJob(){
+      const campaignId = $('campaignId').value.trim();
+      const plannedCount = parseInt($('planned').value||'10',10);
+      if(!campaignId){ alert('Set Campaign ID'); return; }
+
+      const res = await fetch(API_BASE + 'jobs', {
+        method:'POST', headers: HEADERS,
+        body: JSON.stringify({ campaignId, plannedCount })
+      });
+      const data = await res.json();
+      $('jobOut').textContent = 'jobId: ' + (data.jobId || JSON.stringify(data));
+      $('jobId').value = data.jobId || '';
+      setStatus('Job started.');
+    }
+
+    async function loadDrafts(){
+      const jobId = $('jobId').value.trim();
+      if(!jobId){ alert('Set Job ID'); return; }
+
+      const res = await fetch(API_BASE + `jobs/${jobId}/drafts?status=draft`, { headers: HEADERS });
+      const drafts = await res.json();
+      const tbody = $('draftsTbody');
+      tbody.innerHTML = '';
+
+      (drafts || []).forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <div><strong>${d.contactName || '—'}</strong></div>
+            <div class="muted">${d.email || '—'}</div>
+            <div class="muted" style="font-size:12px">${d.domain || ''}</div>
+          </td>
+          <td>${escapeHtml(d.subject || '')}</td>
+          <td><div style="max-width:520px; white-space:pre-wrap">${escapeHtml(d.body || '')}</div></td>
+          <td><span class="pill">${d.status}</span></td>
+          <td class="actions">
+            <button data-id="${d.id}" class="approve">Approve</button>
+            <button data-id="${d.id}" class="send">Send now</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      // attach handlers
+      tbody.querySelectorAll('button.approve').forEach(btn=>{
+        btn.onclick = ()=> approveDraft(btn.dataset.id);
+      });
+      tbody.querySelectorAll('button.send').forEach(btn=>{
+        btn.onclick = ()=> sendDraft(btn.dataset.id);
+      });
+
+      setStatus(`Loaded ${drafts?.length||0} drafts.`);
+    }
+
+    async function approveDraft(id){
+      const res = await fetch(API_BASE + `drafts/${id}/approve`, { method:'POST', headers: HEADERS });
+      await res.json();
+      setStatus('Draft approved.');
+      loadDrafts();
+    }
+
+    async function sendDraft(id){
+      const res = await fetch(API_BASE + `drafts/${id}/send`, { method:'POST', headers: HEADERS });
+      const data = await res.json();
+      setStatus('Sent: ' + JSON.stringify(data));
+      loadDrafts();
+    }
+
+    async function sendApprovedBatch(){
+      const jobId = $('jobId').value.trim();
+      if(!jobId){ alert('Set Job ID'); return; }
+      const res = await fetch(API_BASE + `jobs/${jobId}/send-approved`, { method:'POST', headers: HEADERS });
+      const data = await res.json();
+      setStatus('Batch send: ' + JSON.stringify(data));
+      loadDrafts();
+    }
+
+    // —— UTILS ————————————————————————————————
+    function escapeHtml(s){
+      return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    // —— BIND UI ————————————————————————————————
+    $('createCampaignBtn').onclick = createCampaign;
+    $('startJobBtn').onclick = startJob;
+    $('refreshDraftsBtn').onclick = loadDrafts;
+    $('sendApprovedBtn').onclick = sendApprovedBatch;
+  </script>
+</body>
+</html>
