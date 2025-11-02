@@ -1,45 +1,66 @@
-# Environment Setup Guide
+# Seekan-LG - Autonomous Lead Generation Agent
 
-## Quick Start
+## Overview
+Seekan-LG is an intelligent, autonomous AI-powered lead generation agent that helps businesses discover and connect with potential clients through personalized, compliant outreach. The system combines AI-driven lead discovery with human-in-the-loop approval for optimal results.
 
-1. Copy `.env.example` to `.env`
-2. Fill in your actual API keys and configuration
-3. For Vercel deployment, add these variables in your project settings
+## 🚀 Features
 
-## Required Variables
+### Core Capabilities
+- **🤖 Autonomous Operation** - AI-driven lead discovery and outreach
+- **🎯 Multi-Vertical Support** - Configurable for different industries via JSON presets
+- **👥 Human-in-the-Loop** - Draft approval workflow for quality control
+- **📧 Email Automation** - SendGrid integration for reliable delivery
+- **🛡️ Safety First** - Comprehensive guardrails and compliance measures
+- **📊 Real-time Dashboard** - Professional operator console for monitoring
 
-### OpenAI
-- `OPENAI_API_KEY`: Get from https://platform.openai.com/api-keys
+### Technical Features
+- **⚡ FastAPI Backend** - High-performance Python API
+- **🔒 JWT Authentication** - Secure operator access
+- **📱 Responsive Design** - Works on all devices
+- **🔄 Real-time Updates** - Live dashboard with auto-refresh
+- **🎨 Professional UI** - Clean, intuitive operator interface
 
-### SendGrid  
-- `SENDGRID_API_KEY`: Get from https://app.sendgrid.com/settings/api_keys
-- `ALLOWED_SENDER`: Must be a verified sender in SendGrid
+## 🏗️ Architecture
 
-### Firebase
-- `FIREBASE_PROJECT_ID`: Your Firebase project ID
-- `FIREBASE_CLIENT_EMAIL`: Service account email from Firebase console
-- `FIREBASE_PRIVATE_KEY`: Service account private key from Firebase console
+## 🚀 Quick Start
 
-## Optional Variables
+### 1. Access the System
+Visit your deployed Vercel URL to access the Seekan-LG operator console.
 
-Most variables have sensible defaults. The only truly required ones are:
-- `OPENAI_API_KEY`
-- `SENDGRID_API_KEY` 
-- Firebase variables (if using Firestore persistence)
+### 2. Login Credentials
 
-## Vercel Deployment
+### 3. Basic Workflow
+1. **Create Campaign** → Select from available presets (acu/apl)
+2. **Start Job** → Launch autonomous lead generation
+3. **Review Drafts** → Approve or modify generated emails
+4. **Send Outreach** → Deploy approved campaigns
 
-Add environment variables in:
-1. Go to your Vercel project
-2. Settings → Environment Variables
-3. Add each variable from `.env.example`
+## 📋 API Endpoints
 
-## Local Development
+### Core Endpoints
+- `GET /` - API status and information
+- `GET /health` - Health check
+- `GET /presets` - List available configurations
+- `POST /campaigns` - Create new campaigns
+- `POST /jobs` - Start lead generation jobs
+- `GET /jobs/{id}/drafts` - Review generated drafts
+- `POST /drafts/{id}/approve` - Approve drafts for sending
+- `POST /drafts/{id}/send` - Send approved drafts
 
-```bash
-cp .env.example .env
-# Edit .env with your values
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-pip install -r requirements.txt
-uvicorn api.index:app --reload
+### Preset Configurations
+- **acu** - Acupuncture services (AcuLeadFinder)
+- **apl** - Generic B2B services (APLeadFinder)
+
+## 🔧 Configuration
+
+### Environment Variables
+```env
+# Required
+OPENAI_API_KEY=your-openai-key
+SENDGRID_API_KEY=your-sendgrid-key
+FIREBASE_PROJECT_ID=your-firebase-project
+
+# Optional with defaults
+SEND_CAP_PER_RUN=20
+DAILY_SEND_CAP=200
+DEFAULT_MODEL=gpt-4o
