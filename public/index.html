@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous LeadGen Agent - Operator Console</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .status-badge {
+            @apply px-2 py-1 rounded-full text-xs font-semibold;
+        }
+        .status-queued { @apply bg-yellow-100 text-yellow-800; }
+        .status-running { @apply bg-blue-100 text-blue-800; }
+        .status-completed { @apply bg-green-100 text-green-800; }
+        .status-failed { @apply bg-red-100 text-red-800; }
+        .draft-draft { @apply bg-gray-100 text-gray-800; }
+        .draft-approved { @apply bg-green-100 text-green-800; }
+        .draft-sent { @apply bg-blue-100 text-blue-800; }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">
+                        <i class="fas fa-robot text-blue-600 mr-3"></i>
+                        Autonomous LeadGen Agent
+                    </h1>
+                    <p class="text-gray-600 mt-2">Operator Console - Manage your lead generation campaigns</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-gray-500" id="api-status">
+                        <span class="loading"></span> Checking API status...
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1" id="current-time"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <i class="fas fa-bullseye text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-500">Active Campaigns</h3>
+                        <p class="text-2xl font-semibold text-gray-900" id="active-campaigns">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i class="fas fa-tasks text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-500">Running Jobs</h3>
+                        <p class="text-2xl font-semibold text-gray-900" id="running-jobs">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                        <i class="fas fa-envelope text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-500">Drafts Ready</h3>
+                        <p class="text-2xl font-semibold text-gray-900" id="ready-drafts">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-orange-100 text-orange-600">
+                        <i class="fas fa-paper-plane text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-500">Emails Sent</h3>
+                        <p class="text-2xl font-semibold text-gray-900" id="emails-sent">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column -->
+            <div class="space-y-8">
+                <!-- Campaign Creation -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-plus-circle text-green-600 mr-2"></i>
+                            Create New Campaign
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <form id="campaign-form">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Select Preset
+                                </label>
+                                <select id="preset-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Loading presets...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    AI Model
+                                </label>
+                                <select id="model-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="gpt-4o">GPT-4o (Recommended)</option>
+                                    <option value="gpt-4">GPT-4</option>
+                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Send Cap Per Run
+                                </label>
+                                <input type="number" id="send-cap" value="20" min="1" max="100" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            
+                            <button type="submit" 
+                                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200">
+                                <i class="fas fa-rocket mr-2"></i>
+                                Create Campaign
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Active Campaigns -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-bullseye text-blue-600 mr-2"></i>
+                            Active Campaigns
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div id="campaigns-list" class="space-y-4">
+                            <div class="text-center text-gray-500 py-8">
+                                <div class="loading mx-auto mb-2"></div>
+                                <p>Loading campaigns...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-8">
+                <!-- Job Creation -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-play-circle text-green-600 mr-2"></i>
+                            Start New Job
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <form id="job-form">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Select Campaign
+                                </label>
+                                <select id="campaign-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Loading campaigns...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Planned Lead Count
+                                </label>
+                                <input type="number" id="planned-count" value="10" min="1" max="50" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <p class="text-xs text-gray-500 mt-1">Number of leads to generate and draft emails for</p>
+                            </div>
+                            
+                            <button type="submit" 
+                                    class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200">
+                                <i class="fas fa-play mr-2"></i>
+                                Start Lead Generation
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Active Jobs -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-tasks text-purple-600 mr-2"></i>
+                            Active Jobs
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div id="jobs-list" class="space-y-4">
+                            <div class="text-center text-gray-500 py-8">
+                                <div class="loading mx-auto mb-2"></div>
+                                <p>Loading jobs...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drafts Review Section -->
+        <div class="mt-8 bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-envelope text-orange-600 mr-2"></i>
+                    Draft Review & Approval
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="mb-4 flex space-x-4">
+                    <button onclick="loadDrafts('draft')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition duration-200">
+                        <i class="fas fa-edit mr-2"></i>Pending Review
+                    </button>
+                    <button onclick="loadDrafts('approved')" class="px-4 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition duration-200">
+                        <i class="fas fa-check mr-2"></i>Approved
+                    </button>
+                    <button onclick="loadDrafts('sent')" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition duration-200">
+                        <i class="fas fa-paper-plane mr-2"></i>Sent
+                    </button>
+                </div>
+                <div id="drafts-list" class="space-y-4">
+                    <div class="text-center text-gray-500 py-8">
+                        <p>Select a status to view drafts</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Draft Modal -->
+    <div id="draft-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900">Review Draft</h3>
+                <button onclick="closeDraftModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <div id="draft-content" class="space-y-4">
+                    <!-- Draft content will be loaded here -->
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
+                <button onclick="rejectDraft()" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200">
+                    <i class="fas fa-times mr-2"></i>Reject
+                </button>
+                <button onclick="approveDraft()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200">
+                    <i class="fas fa-check mr-2"></i>Approve
+                </button>
+                <button onclick="sendDraft()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
+                    <i class="fas fa-paper-plane mr-2"></i>Send Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let currentDraftId = null;
+
+        // Initialize the console
+        document.addEventListener('DOMContentLoaded', function() {
+            checkApiStatus();
+            loadPresets();
+            loadCampaigns();
+            loadJobs();
+            updateStats();
+            startAutoRefresh();
+            
+            // Update time every second
+            setInterval(updateTime, 1000);
+            updateTime();
+        });
+
+        function updateTime() {
+            document.getElementById('current-time').textContent = new Date().toLocaleString();
+        }
+
+        async function checkApiStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                document.getElementById('api-status').innerHTML = 
+                    `<i class="fas fa-check-circle text-green-500 mr-1"></i> API Online (v${data.version})`;
+            } catch (error) {
+                document.getElementById('api-status').innerHTML = 
+                    `<i class="fas fa-times-circle text-red-500 mr-1"></i> API Offline`;
+            }
+        }
+
+        async function loadPresets() {
+            try {
+                const response = await fetch(`${API_BASE}/presets`);
+                const data = await response.json();
+                const select = document.getElementById('preset-select');
+                select.innerHTML = '<option value="">Select a preset...</option>';
+                
+                for (const [key, value] of Object.entries(data.presets)) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = value;
+                    select.appendChild(option);
+                }
+            } catch (error) {
+                console.error('Error loading presets:', error);
+            }
+        }
+
+        async function loadCampaigns() {
+            try {
+                // For now, we'll simulate loading campaigns since the endpoint might not be fully implemented
+                const campaignsList = document.getElementById('campaigns-list');
+                campaignsList.innerHTML = `
+                    <div class="border rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-semibold">AcuLeadFinder Campaign</h3>
+                            <span class="status-badge status-running">Active</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">Acupuncture services in Potomac, MD</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>Preset: acu</span>
+                            <span>Created: Just now</span>
+                        </div>
+                    </div>
+                `;
+                
+                // Update campaign select for job creation
+                const campaignSelect = document.getElementById('campaign-select');
+                campaignSelect.innerHTML = '<option value="demo-campaign">AcuLeadFinder Campaign</option>';
+            } catch (error) {
+                console.error('Error loading campaigns:', error);
+            }
+        }
+
+        async function loadJobs() {
+            try {
+                const jobsList = document.getElementById('jobs-list');
+                jobsList.innerHTML = `
+                    <div class="border rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-semibold">Job #001</h3>
+                            <span class="status-badge status-running">Running</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">Generating 5 leads for acupuncture campaign</p>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>Progress: 3/5 drafts</span>
+                            <span>Started: 2 minutes ago</span>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+            }
+        }
+
+        function updateStats() {
+            // Simulate stats for demo
+            document.getElementById('active-campaigns').textContent = '1';
+            document.getElementById('running-jobs').textContent = '1';
+            document.getElementById('ready-drafts').textContent = '3';
+            document.getElementById('emails-sent').textContent = '0';
+        }
+
+        async function loadDrafts(status = 'draft') {
+            try {
+                const draftsList = document.getElementById('drafts-list');
+                draftsList.innerHTML = '<div class="text-center text-gray-500 py-8"><div class="loading mx-auto mb-2"></div><p>Loading drafts...</p></div>';
+                
+                // Simulate API call delay
+                setTimeout(() => {
+                    const drafts = generateMockDrafts(status);
+                    displayDrafts(drafts, status);
+                }, 1000);
+            } catch (error) {
+                console.error('Error loading drafts:', error);
+            }
+        }
+
+        function generateMockDrafts(status) {
+            const drafts = [];
+            const statusCount = status === 'draft' ? 3 : status === 'approved' ? 2 : 1;
+            
+            for (let i = 0; i < statusCount; i++) {
+                drafts.push({
+                    draftId: `draft_${Math.random().toString(36).substr(2, 9)}`,
+                    jobId: `job_001`,
+                    subject: `Professional Introduction - Acupuncture Services ${i + 1}`,
+                    body: `Hello Dr. Smith,\n\nI came across your wellness clinic and was impressed by your holistic approach to healthcare. As a licensed acupuncturist serving the Potomac area, I specialize in pain management, stress reduction, and improving sleep quality through traditional Chinese medicine.\n\nMany healthcare professionals find our services complement their existing treatments beautifully. We're currently offering a special introductory rate for fellow practitioners.\n\nWould you be interested in learning more about how acupuncture could benefit your patients?\n\nBest regards,\nDr. Farahnaz Behroozi\nAvicenna Acupuncture`,
+                    status: status,
+                    createdAt: new Date().toISOString()
+                });
+            }
+            return drafts;
+        }
+
+        function displayDrafts(drafts, status) {
+            const draftsList = document.getElementById('drafts-list');
+            
+            if (drafts.length === 0) {
+                draftsList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-inbox text-4xl mb-4 opacity-50"></i>
+                        <p>No ${status} drafts found</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            draftsList.innerHTML = drafts.map(draft => `
+                <div class="border rounded-lg p-4 hover:shadow-md transition duration-200">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-semibold text-gray-900">${draft.subject}</h3>
+                        <span class="status-badge draft-${draft.status}">${draft.status}</span>
+                    </div>
+                    <div class="text-sm text-gray-600 mb-3 line-clamp-3">${draft.body.replace(/\n/g, '<br>')}</div>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <span>Job: ${draft.jobId}</span>
+                        <span>Created: ${new Date(draft.createdAt).toLocaleTimeString()}</span>
+                    </div>
+                    <div class="mt-3 flex space-x-2">
+                        <button onclick="viewDraft('${draft.draftId}')" 
+                                class="flex-1 bg-blue-50 text-blue-700 py-2 px-3 rounded text-sm hover:bg-blue-100 transition duration-200">
+                            <i class="fas fa-eye mr-1"></i> Review
+                        </button>
+                        ${draft.status === 'draft' ? `
+                        <button onclick="approveDraft('${draft.draftId}')" 
+                                class="flex-1 bg-green-50 text-green-700 py-2 px-3 rounded text-sm hover:bg-green-100 transition duration-200">
+                            <i class="fas fa-check mr-1"></i> Approve
+                        </button>
+                        ` : ''}
+                        ${draft.status === 'approved' ? `
+                        <button onclick="sendDraft('${draft.draftId}')" 
+                                class="flex-1 bg-blue-50 text-blue-700 py-2 px-3 rounded text-sm hover:bg-blue-100 transition duration-200">
+                            <i class="fas fa-paper-plane mr-1"></i> Send
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewDraft(draftId) {
+            currentDraftId = draftId;
+            const draft = generateMockDrafts('draft')[0]; // In real app, fetch from API
+            document.getElementById('draft-content').innerHTML = `
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">Subject:</h4>
+                    <p class="mb-4 p-3 bg-gray-50 rounded">${draft.subject}</p>
+                    
+                    <h4 class="font-semibold text-gray-900 mb-2">Body:</h4>
+                    <div class="p-3 bg-gray-50 rounded whitespace-pre-line">${draft.body}</div>
+                    
+                    <div class="mt-4 text-sm text-gray-500">
+                        <p><strong>Draft ID:</strong> ${draftId}</p>
+                        <p><strong>Job ID:</strong> ${draft.jobId}</p>
+                        <p><strong>Status:</strong> ${draft.status}</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('draft-modal').classList.remove('hidden');
+        }
+
+        function closeDraftModal() {
+            document.getElementById('draft-modal').classList.add('hidden');
+            currentDraftId = null;
+        }
+
+        async function approveDraft(draftId = currentDraftId) {
+            if (!draftId) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/drafts/${draftId}/approve`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    alert('Draft approved successfully!');
+                    closeDraftModal();
+                    loadDrafts('draft');
+                    updateStats();
+                } else {
+                    alert('Error approving draft');
+                }
+            } catch (error) {
+                console.error('Error approving draft:', error);
+                alert('Error approving draft');
+            }
+        }
+
+        async function sendDraft(draftId = currentDraftId) {
+            if (!draftId) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/drafts/${draftId}/send`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    alert('Draft sent successfully!');
+                    closeDraftModal();
+                    loadDrafts('approved');
+                    updateStats();
+                } else {
+                    alert('Error sending draft');
+                }
+            } catch (error) {
+                console.error('Error sending draft:', error);
+                alert('Error sending draft');
+            }
+        }
+
+        function rejectDraft() {
+            if (confirm('Are you sure you want to reject this draft?')) {
+                alert('Draft rejected (simulated)');
+                closeDraftModal();
+                loadDrafts('draft');
+            }
+        }
+
+        // Form handlers
+        document.getElementById('campaign-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const preset = document.getElementById('preset-select').value;
+            
+            if (!preset) {
+                alert('Please select a preset');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/campaigns`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        preset: preset,
+                        model: document.getElementById('model-select').value,
+                        sendCapPerRun: parseInt(document.getElementById('send-cap').value)
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Campaign created successfully! ID: ${data.campaignId}`);
+                    loadCampaigns();
+                    updateStats();
+                    this.reset();
+                } else {
+                    alert('Error creating campaign');
+                }
+            } catch (error) {
+                console.error('Error creating campaign:', error);
+                alert('Error creating campaign');
+            }
+        });
+
+        document.getElementById('job-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const campaignId = document.getElementById('campaign-select').value;
+            const plannedCount = parseInt(document.getElementById('planned-count').value);
+            
+            if (!campaignId) {
+                alert('Please select a campaign');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/jobs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        campaignId: campaignId,
+                        plannedCount: plannedCount
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Job started successfully! ID: ${data.jobId}`);
+                    loadJobs();
+                    updateStats();
+                    this.reset();
+                } else {
+                    alert('Error starting job');
+                }
+            } catch (error) {
+                console.error('Error starting job:', error);
+                alert('Error starting job');
+            }
+        });
+
+        function startAutoRefresh() {
+            setInterval(() => {
+                loadCampaigns();
+                loadJobs();
+                updateStats();
+            }, 30000); // Refresh every 30 seconds
+        }
+    </script>
+</body>
+</html>
