@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autonomous LeadGen Agent - Operator Console</title>
+    <title>Seekan-LG - Autonomous LeadGen Agent</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -45,7 +45,7 @@
             <div class="px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-900">
                     <i class="fas fa-lock text-blue-600 mr-2"></i>
-                    Operator Sign In
+                    Seekan-LG Operator Sign In
                 </h3>
             </div>
             <div class="p-6">
@@ -79,7 +79,7 @@
                     <p class="text-sm text-gray-600">
                         Demo Credentials:<br>
                         <strong>Username:</strong> operator<br>
-                        <strong>Password:</strong> leadgen123
+                        <strong>Password:</strong> seekanlg123
                     </p>
                 </div>
             </div>
@@ -95,9 +95,9 @@
                     <div>
                         <h1 class="text-3xl font-bold text-gray-900">
                             <i class="fas fa-robot text-blue-600 mr-3"></i>
-                            Autonomous LeadGen Agent
+                            Seekan-LG
                         </h1>
-                        <p class="text-gray-600 mt-2">Operator Console - Manage your lead generation campaigns</p>
+                        <p class="text-gray-600 mt-2">Autonomous Lead Generation Agent - Operator Console</p>
                     </div>
                     <div class="text-right">
                         <div class="flex items-center space-x-4">
@@ -326,7 +326,7 @@
         <div id="draft-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-40">
             <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 class="text-lg font-semibold text-gray-900">Review Draft</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Review Draft - Seekan-LG</h3>
                     <button onclick="closeDraftModal()" class="text-gray-400 hover:text-gray-600">
                         <i class="fas fa-times text-xl"></i>
                     </button>
@@ -354,7 +354,7 @@
     <script>
         const API_BASE = window.location.origin;
         let currentDraftId = null;
-        let authToken = localStorage.getItem('leadgen_auth_token');
+        let authToken = localStorage.getItem('seekanlg_auth_token');
 
         // Initialize the console
         document.addEventListener('DOMContentLoaded', function() {
@@ -388,7 +388,7 @@
             if (tokenData && tokenData.exp > Date.now() / 1000) {
                 showMainApp();
             } else {
-                localStorage.removeItem('leadgen_auth_token');
+                localStorage.removeItem('seekanlg_auth_token');
                 authToken = null;
                 showLoginModal();
             }
@@ -409,7 +409,7 @@
             const password = document.getElementById('password').value;
 
             // Demo authentication - in production, this would call your backend
-            if (username === 'operator' && password === 'leadgen123') {
+            if (username === 'operator' && password === 'seekanlg123') {
                 // Generate a mock JWT token
                 const tokenData = {
                     username: username,
@@ -420,17 +420,17 @@
                 // Mock JWT token (in production, this comes from your backend)
                 const mockToken = btoa(JSON.stringify(tokenData));
                 authToken = mockToken;
-                localStorage.setItem('leadgen_auth_token', mockToken);
+                localStorage.setItem('seekanlg_auth_token', mockToken);
                 
                 showMainApp();
             } else {
-                alert('Invalid credentials. Use: operator / leadgen123');
+                alert('Invalid credentials. Use: operator / seekanlg123');
             }
         });
 
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('leadgen_auth_token');
+                localStorage.removeItem('seekanlg_auth_token');
                 authToken = null;
                 showLoginModal();
             }
@@ -454,7 +454,7 @@
                 const response = await fetch(`${API_BASE}/health`);
                 const data = await response.json();
                 document.getElementById('api-status').innerHTML = 
-                    `<i class="fas fa-check-circle text-green-500 mr-1"></i> API Online (v${data.version})`;
+                    `<i class="fas fa-check-circle text-green-500 mr-1"></i> Seekan-LG API Online (v${data.version})`;
             } catch (error) {
                 document.getElementById('api-status').innerHTML = 
                     `<i class="fas fa-times-circle text-red-500 mr-1"></i> API Offline`;
@@ -558,7 +558,7 @@
                     draftId: `draft_${Math.random().toString(36).substr(2, 9)}`,
                     jobId: `job_001`,
                     subject: `Professional Introduction - Acupuncture Services ${i + 1}`,
-                    body: `Hello Dr. Smith,\n\nI came across your wellness clinic and was impressed by your holistic approach to healthcare. As a licensed acupuncturist serving the Potomac area, I specialize in pain management, stress reduction, and improving sleep quality through traditional Chinese medicine.\n\nMany healthcare professionals find our services complement their existing treatments beautifully. We're currently offering a special introductory rate for fellow practitioners.\n\nWould you be interested in learning more about how acupuncture could benefit your patients?\n\nBest regards,\nDr. Farahnaz Behroozi\nAvicenna Acupuncture`,
+                    body: `Hello Dr. Smith,\n\nI came across your wellness clinic and was impressed by your holistic approach to healthcare. As a licensed acupuncturist serving the Potomac area, I specialize in pain management, stress reduction, and improving sleep quality through traditional Chinese medicine.\n\nMany healthcare professionals find our services complement their existing treatments beautifully. We're currently offering a special introductory rate for fellow practitioners.\n\nWould you be interested in learning more about how acupuncture could benefit your patients?\n\nBest regards,\nDr. Farahnaz Behroozi\nAvicenna Acupuncture\n\n---\nSeekan-LG Autonomous Lead Generation`,
                     status: status,
                     createdAt: new Date().toISOString()
                 });
@@ -627,6 +627,7 @@
                         <p><strong>Draft ID:</strong> ${draftId}</p>
                         <p><strong>Job ID:</strong> ${draft.jobId}</p>
                         <p><strong>Status:</strong> ${draft.status}</p>
+                        <p><strong>Generated by:</strong> Seekan-LG Agent</p>
                     </div>
                 </div>
             `;
