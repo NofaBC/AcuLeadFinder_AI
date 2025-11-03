@@ -6,6 +6,12 @@
     <title>Seekan-LG - Autonomous LeadGen Agent</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
     <style>
         .status-badge {
             @apply px-2 py-1 rounded-full text-xs font-semibold;
@@ -45,9 +51,51 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+        
+        .notification.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .notification.info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- Notification System -->
+    <div id="notification" class="notification hidden">
+        <div class="flex items-center">
+            <i id="notification-icon" class="fas fa-info-circle mr-2"></i>
+            <span id="notification-message">Notification message</span>
+        </div>
+    </div>
+
     <!-- Login Modal -->
     <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
@@ -62,11 +110,11 @@
                 <form id="login-form">
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-user mr-2"></i>Username
+                            <i class="fas fa-user mr-2"></i>Email
                         </label>
-                        <input type="text" id="username" required
+                        <input type="email" id="email" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                               placeholder="Enter your username">
+                               placeholder="Enter your email">
                     </div>
                     
                     <div class="mb-6">
@@ -78,7 +126,7 @@
                                placeholder="Enter your password">
                     </div>
                     
-                    <button type="submit" 
+                    <button type="submit" id="login-button"
                             class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200">
                         <i class="fas fa-sign-in-alt mr-2"></i>
                         Sign In
@@ -88,7 +136,7 @@
                 <div class="mt-4 text-center">
                     <p class="text-sm text-gray-600">
                         Demo Credentials:<br>
-                        <strong>Username:</strong> operator<br>
+                        <strong>Email:</strong> operator@seekanlg.com<br>
                         <strong>Password:</strong> seekanlg123
                     </p>
                 </div>
@@ -119,6 +167,7 @@
                                 <span class="loading"></span> Checking API status...
                             </div>
                             <div class="text-xs text-gray-400" id="current-time"></div>
+                            <div class="text-sm text-gray-600" id="user-email"></div>
                             <button onclick="logout()" 
                                     class="ml-4 px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition duration-200 text-sm">
                                 <i class="fas fa-sign-out-alt mr-1"></i>Logout
@@ -153,7 +202,7 @@
                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                            placeholder="https://example.com">
                                 </div>
-                                <button type="submit" 
+                                <button type="submit" id="analyze-website-button"
                                         class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200">
                                     <i class="fas fa-search mr-2"></i>
                                     Analyze Website
@@ -272,7 +321,6 @@
                                         </label>
                                         <select id="business-profile-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                                             <option value="">Select business profile...</option>
-                                            <option value="auto-acu">Auto: Avicenna Acupuncture (AcuLeadFinder)</option>
                                         </select>
                                         <p class="text-xs text-gray-500 mt-1">Required for APLeadFinder, optional for AcuLeadFinder</p>
                                     </div>
@@ -299,7 +347,7 @@
                                     </div>
                                 </div>
                                 
-                                <button type="submit" 
+                                <button type="submit" id="create-campaign-button"
                                         class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200">
                                     <i class="fas fa-rocket mr-2"></i>
                                     Create Campaign
@@ -357,7 +405,7 @@
                                     <p class="text-xs text-gray-500 mt-1">Number of leads to generate and draft emails for</p>
                                 </div>
                                 
-                                <button type="submit" 
+                                <button type="submit" id="start-job-button"
                                         class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200">
                                     <i class="fas fa-play mr-2"></i>
                                     Start Lead Generation
@@ -585,20 +633,40 @@
     </div>
 
     <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            // Replace with your Firebase project configuration
+            apiKey: "AIzaSyC4RLQOoEXAMPLEKEY12345",
+            authDomain: "seekan-lg.firebaseapp.com",
+            projectId: "seekan-lg",
+            storageBucket: "seekan-lg.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef1234567890"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // App State
         const API_BASE = window.location.origin;
         let currentDraftId = null;
         let currentAnalysisResults = null;
-        let authToken = localStorage.getItem('seekanlg_auth_token');
         let autoRefreshInterval = null;
+        let currentUser = null;
 
         // Initialize the console
         document.addEventListener('DOMContentLoaded', function() {
-            if (authToken) {
-                // Verify token is still valid
-                verifyToken();
-            } else {
-                showLoginModal();
-            }
+            // Check if user is already logged in
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    currentUser = user;
+                    showMainApp();
+                } else {
+                    showLoginModal();
+                }
+            });
             
             // Update time every second
             setInterval(updateTime, 1000);
@@ -613,62 +681,41 @@
         function showMainApp() {
             document.getElementById('login-modal').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('user-email').textContent = currentUser.email;
             initializeApp();
         }
 
-        function verifyToken() {
-            // In a real app, this would verify with the backend
-            // For demo, we'll just check if token exists and is not expired
-            const tokenData = parseJwt(authToken);
-            if (tokenData && tokenData.exp > Date.now() / 1000) {
-                showMainApp();
-            } else {
-                localStorage.removeItem('seekanlg_auth_token');
-                authToken = null;
-                showLoginModal();
-            }
-        }
-
-        function parseJwt(token) {
-            try {
-                return JSON.parse(atob(token.split('.')[1]));
-            } catch (e) {
-                return null;
-            }
-        }
-
         // Login form handler
-        document.getElementById('login-form').addEventListener('submit', function(e) {
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            // Demo authentication - in production, this would call your backend
-            if (username === 'operator' && password === 'seekanlg123') {
-                // Generate a mock JWT token
-                const tokenData = {
-                    username: username,
-                    role: 'operator',
-                    exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-                };
-                
-                // Mock JWT token (in production, this comes from your backend)
-                const mockToken = btoa(JSON.stringify(tokenData));
-                authToken = mockToken;
-                localStorage.setItem('seekanlg_auth_token', mockToken);
-                
-                showMainApp();
-            } else {
-                alert('Invalid credentials. Use: operator / seekanlg123');
+            const button = document.getElementById('login-button');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<div class="loading"></div> Signing in...';
+            button.disabled = true;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showNotification('Successfully signed in!', 'success');
+            } catch (error) {
+                showNotification('Invalid credentials. Use: operator@seekanlg.com / seekanlg123', 'error');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
             }
         });
 
-        function logout() {
+        async function logout() {
             if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('seekanlg_auth_token');
-                authToken = null;
-                if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-                showLoginModal();
+                try {
+                    await auth.signOut();
+                    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+                    showNotification('Successfully logged out', 'info');
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
             }
         }
 
@@ -692,10 +739,11 @@
 
         async function checkApiStatus() {
             try {
-                const response = await fetch(`${API_BASE}/health`);
-                const data = await response.json();
-                document.getElementById('api-status').innerHTML = 
-                    `<i class="fas fa-check-circle text-green-500 mr-1"></i> Seekan-LG API Online (v${data.version})`;
+                // For demo purposes, we'll simulate API check
+                setTimeout(() => {
+                    document.getElementById('api-status').innerHTML = 
+                        `<i class="fas fa-check-circle text-green-500 mr-1"></i> Seekan-LG API Online (v1.0.0)`;
+                }, 1000);
             } catch (error) {
                 document.getElementById('api-status').innerHTML = 
                     `<i class="fas fa-times-circle text-red-500 mr-1"></i> API Offline`;
@@ -704,104 +752,202 @@
 
         async function loadPresets() {
             try {
-                const response = await fetch(`${API_BASE}/presets`);
-                const data = await response.json();
-                const select = document.getElementById('preset-select');
-                select.innerHTML = '<option value="">Select a preset...</option>';
-                
-                for (const [key, value] of Object.entries(data.presets)) {
-                    const option = document.createElement('option');
-                    option.value = key;
-                    option.textContent = value;
-                    select.appendChild(option);
-                }
-            } catch (error) {
-                console.error('Error loading presets:', error);
-                // Fallback demo presets
+                // In a real app, this would fetch from your backend
                 const select = document.getElementById('preset-select');
                 select.innerHTML = `
                     <option value="">Select a preset...</option>
                     <option value="acu">AcuLeadFinder (Acupuncture)</option>
                     <option value="ap">APLeadFinder (All-purpose)</option>
                     <option value="local">Local Service Finder</option>
+                    <option value="saas">SaaS Lead Generator</option>
                 `;
+            } catch (error) {
+                console.error('Error loading presets:', error);
             }
         }
 
         async function loadCampaigns() {
             try {
-                // For now, we'll simulate loading campaigns since the endpoint might not be fully implemented
-                const campaignsList = document.getElementById('campaigns-list');
-                campaignsList.innerHTML = `
-                    <div class="border rounded-lg p-4 fade-in">
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="font-semibold">AcuLeadFinder Campaign</h3>
-                            <span class="status-badge status-running">Active</span>
-                        </div>
-                        <p class="text-sm text-gray-600 mb-2">Acupuncture services in Potomac, MD</p>
-                        <div class="flex justify-between text-xs text-gray-500">
-                            <span>Preset: acu</span>
-                            <span>Created: Just now</span>
-                        </div>
-                    </div>
-                `;
+                if (!currentUser) return;
                 
-                // Update campaign select for job creation
+                const campaignsList = document.getElementById('campaigns-list');
                 const campaignSelect = document.getElementById('campaign-select');
-                campaignSelect.innerHTML = '<option value="demo-campaign">AcuLeadFinder Campaign</option>';
+                
+                // Get campaigns from Firestore
+                const snapshot = await db.collection('campaigns')
+                    .where('userId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                if (snapshot.empty) {
+                    campaignsList.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="fas fa-bullseye text-3xl mb-2 opacity-50"></i>
+                            <p>No campaigns yet</p>
+                            <p class="text-sm">Create your first campaign to start generating leads</p>
+                        </div>
+                    `;
+                    campaignSelect.innerHTML = '<option value="">No campaigns available</option>';
+                    return;
+                }
+                
+                let campaignsHtml = '';
+                let campaignOptions = '<option value="">Select a campaign...</option>';
+                
+                snapshot.forEach(doc => {
+                    const campaign = doc.data();
+                    const statusClass = `status-${campaign.status}`;
+                    
+                    campaignsHtml += `
+                        <div class="border rounded-lg p-4 fade-in">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-semibold">${campaign.name || 'Unnamed Campaign'}</h3>
+                                <span class="status-badge ${statusClass}">${campaign.status}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">${campaign.description || 'No description'}</p>
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>Preset: ${campaign.preset}</span>
+                                <span>Created: ${formatFirestoreTimestamp(campaign.createdAt)}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    campaignOptions += `<option value="${doc.id}">${campaign.name || 'Unnamed Campaign'}</option>`;
+                });
+                
+                campaignsList.innerHTML = campaignsHtml;
+                campaignSelect.innerHTML = campaignOptions;
+                
             } catch (error) {
                 console.error('Error loading campaigns:', error);
+                showNotification('Error loading campaigns', 'error');
             }
         }
 
         async function loadJobs() {
             try {
+                if (!currentUser) return;
+                
                 const jobsList = document.getElementById('jobs-list');
-                jobsList.innerHTML = `
-                    <div class="border rounded-lg p-4 fade-in">
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="font-semibold">Job #001</h3>
-                            <span class="status-badge status-running">Running</span>
+                
+                // Get jobs from Firestore
+                const snapshot = await db.collection('jobs')
+                    .where('userId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .limit(5)
+                    .get();
+                
+                if (snapshot.empty) {
+                    jobsList.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="fas fa-tasks text-3xl mb-2 opacity-50"></i>
+                            <p>No active jobs</p>
+                            <p class="text-sm">Start a new job to generate leads</p>
                         </div>
-                        <p class="text-sm text-gray-600 mb-2">Generating 5 leads for acupuncture campaign</p>
-                        <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
-                            <div class="bg-blue-600 h-2 rounded-full" style="width: 60%"></div>
+                    `;
+                    return;
+                }
+                
+                let jobsHtml = '';
+                
+                snapshot.forEach(doc => {
+                    const job = doc.data();
+                    const statusClass = `status-${job.status}`;
+                    const progress = job.progress || 0;
+                    
+                    jobsHtml += `
+                        <div class="border rounded-lg p-4 fade-in">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-semibold">Job #${doc.id.substring(0, 6)}</h3>
+                                <span class="status-badge ${statusClass}">${job.status}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">Generating ${job.plannedCount} leads</p>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: ${progress}%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>Progress: ${progress}%</span>
+                                <span>Started: ${formatFirestoreTimestamp(job.createdAt)}</span>
+                            </div>
                         </div>
-                        <div class="flex justify-between text-xs text-gray-500">
-                            <span>Progress: 3/5</span>
-                            <span>Started: 2 min ago</span>
-                        </div>
-                    </div>
-                `;
+                    `;
+                });
+                
+                jobsList.innerHTML = jobsHtml;
+                
             } catch (error) {
                 console.error('Error loading jobs:', error);
+                showNotification('Error loading jobs', 'error');
             }
         }
 
         async function loadBusinessProfiles() {
             try {
+                if (!currentUser) return;
+                
                 const profilesList = document.getElementById('business-profiles-list');
-                profilesList.innerHTML = `
-                    <div class="border rounded-lg p-4 fade-in">
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="font-semibold">Avicenna Acupuncture</h3>
-                            <span class="status-badge status-completed">Active</span>
+                const profileSelect = document.getElementById('business-profile-select');
+                
+                // Get profiles from Firestore
+                const snapshot = await db.collection('businessProfiles')
+                    .where('userId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                if (snapshot.empty) {
+                    profilesList.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-building text-3xl mb-2 opacity-50"></i>
+                            <p>No business profiles yet</p>
+                            <p class="text-sm">Create your first profile to enable context-aware lead generation</p>
                         </div>
-                        <p class="text-sm text-gray-600 mb-2">Acupuncture services in Potomac, MD</p>
-                        <div class="flex justify-between text-xs text-gray-500">
-                            <span>Created: Today</span>
-                            <button onclick="editProfile('demo-profile')" class="text-blue-600 hover:text-blue-800">
-                                <i class="fas fa-edit mr-1"></i>Edit
-                            </button>
+                    `;
+                    profileSelect.innerHTML = '<option value="">No profiles available</option>';
+                    return;
+                }
+                
+                let profilesHtml = '';
+                let profileOptions = '<option value="">Select business profile...</option>';
+                
+                snapshot.forEach(doc => {
+                    const profile = doc.data();
+                    
+                    profilesHtml += `
+                        <div class="border rounded-lg p-4 fade-in">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-semibold">${profile.companyName}</h3>
+                                <span class="status-badge status-completed">Active</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">${profile.industry}</p>
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>Services: ${profile.services.slice(0, 2).join(', ')}${profile.services.length > 2 ? '...' : ''}</span>
+                                <div>
+                                    <button onclick="editProfile('${doc.id}')" class="text-blue-600 hover:text-blue-800 mr-2">
+                                        <i class="fas fa-edit mr-1"></i>Edit
+                                    </button>
+                                    <button onclick="deleteProfile('${doc.id}')" class="text-red-600 hover:text-red-800">
+                                        <i class="fas fa-trash mr-1"></i>Delete
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                    
+                    profileOptions += `<option value="${doc.id}">${profile.companyName}</option>`;
+                });
+                
+                profilesList.innerHTML = profilesHtml;
+                profileSelect.innerHTML = profileOptions;
+                
             } catch (error) {
                 console.error('Error loading business profiles:', error);
+                showNotification('Error loading business profiles', 'error');
             }
         }
 
         function updateStats() {
+            // This would normally aggregate data from Firestore
+            // For now, we'll use placeholder values
             document.getElementById('active-campaigns').textContent = '1';
             document.getElementById('running-jobs').textContent = '1';
             document.getElementById('ready-drafts').textContent = '2';
@@ -821,28 +967,48 @@
         async function handleCampaignCreation(e) {
             e.preventDefault();
             
+            if (!currentUser) {
+                showNotification('Please log in to create campaigns', 'error');
+                return;
+            }
+            
             const preset = document.getElementById('preset-select').value;
             const businessProfile = document.getElementById('business-profile-select').value;
             const model = document.getElementById('model-select').value;
             const sendCap = document.getElementById('send-cap').value;
             
             if (!preset) {
-                alert('Please select a preset');
+                showNotification('Please select a preset', 'error');
                 return;
             }
             
             // Show loading state
-            const button = e.target.querySelector('button[type="submit"]');
+            const button = document.getElementById('create-campaign-button');
             const originalText = button.innerHTML;
             button.innerHTML = '<div class="loading"></div> Creating Campaign...';
             button.disabled = true;
             
             try {
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Save to Firestore
+                const campaignData = {
+                    name: `Campaign ${new Date().toLocaleDateString()}`,
+                    preset,
+                    businessProfile,
+                    model,
+                    sendCap: parseInt(sendCap),
+                    userId: currentUser.uid,
+                    status: 'active',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    stats: {
+                        leadsGenerated: 0,
+                        emailsSent: 0,
+                        repliesReceived: 0
+                    }
+                };
                 
-                // Success
-                alert('Campaign created successfully!');
+                await db.collection('campaigns').add(campaignData);
+                
+                showNotification('Campaign created successfully!', 'success');
                 loadCampaigns();
                 updateStats();
                 
@@ -850,7 +1016,8 @@
                 e.target.reset();
                 
             } catch (error) {
-                alert('Error creating campaign: ' + error.message);
+                console.error('Error creating campaign:', error);
+                showNotification('Error creating campaign: ' + error.message, 'error');
             } finally {
                 button.innerHTML = originalText;
                 button.disabled = false;
@@ -860,42 +1027,124 @@
         async function handleJobCreation(e) {
             e.preventDefault();
             
-            const campaign = document.getElementById('campaign-select').value;
+            if (!currentUser) {
+                showNotification('Please log in to start jobs', 'error');
+                return;
+            }
+            
+            const campaignId = document.getElementById('campaign-select').value;
             const plannedCount = document.getElementById('planned-count').value;
             
-            if (!campaign) {
-                alert('Please select a campaign');
+            if (!campaignId) {
+                showNotification('Please select a campaign', 'error');
                 return;
             }
             
             // Show loading state
-            const button = e.target.querySelector('button[type="submit"]');
+            const button = document.getElementById('start-job-button');
             const originalText = button.innerHTML;
             button.innerHTML = '<div class="loading"></div> Starting Job...';
             button.disabled = true;
             
             try {
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Save to Firestore
+                const jobData = {
+                    campaignId,
+                    plannedCount: parseInt(plannedCount),
+                    userId: currentUser.uid,
+                    status: 'running',
+                    progress: 0,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    startedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
                 
-                // Success
-                alert('Job started successfully!');
+                const jobRef = await db.collection('jobs').add(jobData);
+                
+                // Simulate job progress
+                simulateJobProgress(jobRef.id);
+                
+                showNotification('Job started successfully!', 'success');
                 loadJobs();
                 updateStats();
                 
                 // Reset form
-                e.target.reset();
                 document.getElementById('planned-count').value = 10;
                 
             } catch (error) {
-                alert('Error starting job: ' + error.message);
+                console.error('Error starting job:', error);
+                showNotification('Error starting job: ' + error.message, 'error');
             } finally {
                 button.innerHTML = originalText;
                 button.disabled = false;
             }
         }
 
+        async function simulateJobProgress(jobId) {
+            // Simulate job progress for demo
+            let progress = 0;
+            const interval = setInterval(async () => {
+                progress += 10;
+                await db.collection('jobs').doc(jobId).update({
+                    progress: progress
+                });
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    await db.collection('jobs').doc(jobId).update({
+                        status: 'completed',
+                        completedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    // Create some sample drafts
+                    await createSampleDrafts(jobId);
+                    
+                    loadJobs();
+                    updateStats();
+                }
+            }, 1000);
+        }
+
+        async function createSampleDrafts(jobId) {
+            // Create sample drafts for demonstration
+            const jobDoc = await db.collection('jobs').doc(jobId).get();
+            const job = jobDoc.data();
+            
+            const sampleDrafts = [
+                {
+                    leadName: 'Sarah Johnson',
+                    leadCompany: 'Wellness Center Inc.',
+                    subject: 'Acupuncture Partnership Opportunity',
+                    content: 'I was impressed to learn about Wellness Center Inc.\'s commitment to holistic health approaches...',
+                    status: 'draft'
+                },
+                {
+                    leadName: 'Michael Chen',
+                    leadCompany: 'HealthPlus Clinic',
+                    subject: 'Collaboration for Patient Referrals',
+                    content: 'Your clinic specializes in traditional Chinese medicine...',
+                    status: 'draft'
+                }
+            ];
+            
+            const batch = db.batch();
+            
+            sampleDrafts.forEach(draft => {
+                const draftRef = db.collection('drafts').doc();
+                batch.set(draftRef, {
+                    ...draft,
+                    jobId: jobId,
+                    campaignId: job.campaignId,
+                    userId: currentUser.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+            
+            await batch.commit();
+        }
+
         async function loadDrafts(status) {
+            if (!currentUser) return;
+            
             const draftsList = document.getElementById('drafts-list');
             
             // Show loading
@@ -907,36 +1156,14 @@
             `;
             
             try {
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Get drafts from Firestore
+                const snapshot = await db.collection('drafts')
+                    .where('userId', '==', currentUser.uid)
+                    .where('status', '==', status)
+                    .orderBy('createdAt', 'desc')
+                    .get();
                 
-                // Mock data for demonstration
-                const mockDrafts = {
-                    draft: [
-                        {
-                            id: 'draft-001',
-                            leadName: 'Sarah Johnson',
-                            leadCompany: 'Wellness Center Inc.',
-                            subject: 'Acupuncture Partnership Opportunity',
-                            preview: 'I noticed your wellness center focuses on holistic health approaches...',
-                            created: '5 min ago'
-                        },
-                        {
-                            id: 'draft-002',
-                            leadName: 'Michael Chen',
-                            leadCompany: 'HealthPlus Clinic',
-                            subject: 'Collaboration for Patient Referrals',
-                            preview: 'Your clinic specializes in traditional Chinese medicine...',
-                            created: '12 min ago'
-                        }
-                    ],
-                    approved: [],
-                    sent: []
-                };
-                
-                const drafts = mockDrafts[status] || [];
-                
-                if (drafts.length === 0) {
+                if (snapshot.empty) {
                     draftsList.innerHTML = `
                         <div class="text-center text-gray-500 py-8">
                             <i class="fas fa-envelope-open text-3xl mb-2 opacity-50"></i>
@@ -947,21 +1174,23 @@
                 }
                 
                 let html = '';
-                drafts.forEach(draft => {
-                    const statusClass = `draft-${status}`;
+                snapshot.forEach(doc => {
+                    const draft = doc.data();
+                    const statusClass = `draft-${draft.status}`;
+                    
                     html += `
-                        <div class="border rounded-lg p-4 fade-in cursor-pointer hover:bg-gray-50" onclick="openDraft('${draft.id}')">
+                        <div class="border rounded-lg p-4 fade-in cursor-pointer hover:bg-gray-50" onclick="openDraft('${doc.id}')">
                             <div class="flex justify-between items-start mb-2">
                                 <div>
                                     <h3 class="font-semibold">${draft.leadName}</h3>
                                     <p class="text-sm text-gray-600">${draft.leadCompany}</p>
                                 </div>
-                                <span class="status-badge ${statusClass}">${status}</span>
+                                <span class="status-badge ${statusClass}">${draft.status}</span>
                             </div>
                             <h4 class="font-medium text-gray-900 mb-1">${draft.subject}</h4>
-                            <p class="text-sm text-gray-600 mb-2">${draft.preview}</p>
+                            <p class="text-sm text-gray-600 mb-2">${draft.content.substring(0, 100)}...</p>
                             <div class="flex justify-between text-xs text-gray-500">
-                                <span>Created: ${draft.created}</span>
+                                <span>Created: ${formatFirestoreTimestamp(draft.createdAt)}</span>
                                 <span>Click to review</span>
                             </div>
                         </div>
@@ -971,6 +1200,7 @@
                 draftsList.innerHTML = html;
                 
             } catch (error) {
+                console.error('Error loading drafts:', error);
                 draftsList.innerHTML = `
                     <div class="text-center text-red-500 py-8">
                         <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
@@ -981,48 +1211,37 @@
             }
         }
 
-        function openDraft(draftId) {
+        async function openDraft(draftId) {
             currentDraftId = draftId;
             
-            // Load mock draft content
-            document.getElementById('draft-content').innerHTML = `
-                <div class="border-b border-gray-200 pb-4 mb-4">
-                    <h3 class="font-semibold text-lg">Acupuncture Partnership Opportunity</h3>
-                    <p class="text-sm text-gray-600">To: Sarah Johnson &lt;sarah@wellnesscenter.com&gt;</p>
-                    <p class="text-sm text-gray-600">From: Avicenna Acupuncture &lt;info@avicenna-acu.com&gt;</p>
-                </div>
+            try {
+                const draftDoc = await db.collection('drafts').doc(draftId).get();
+                const draft = draftDoc.data();
                 
-                <div class="prose max-w-none">
-                    <p>Dear Sarah,</p>
+                // Load draft content
+                document.getElementById('draft-content').innerHTML = `
+                    <div class="border-b border-gray-200 pb-4 mb-4">
+                        <h3 class="font-semibold text-lg">${draft.subject}</h3>
+                        <p class="text-sm text-gray-600">To: ${draft.leadName} &lt;${draft.leadEmail || 'email@example.com'}&gt;</p>
+                        <p class="text-sm text-gray-600">From: Your Business &lt;info@yourbusiness.com&gt;</p>
+                    </div>
                     
-                    <p>I was impressed to learn about Wellness Center Inc.'s commitment to holistic health approaches. As the lead practitioner at Avicenna Acupuncture in Potomac, MD, I believe our specialized acupuncture services could complement your existing wellness offerings.</p>
+                    <div class="prose max-w-none">
+                        <p>${draft.content.replace(/\n/g, '</p><p>')}</p>
+                    </div>
                     
-                    <p>Our clinic specializes in:</p>
-                    <ul>
-                        <li>Traditional Chinese Medicine acupuncture</li>
-                        <li>Pain management and stress reduction</li>
-                        <li>Customized treatment plans</li>
-                    </ul>
-                    
-                    <p>We've helped numerous clients achieve better balance and relief from chronic conditions. I'd love to explore how we might collaborate, whether through patient referrals, joint wellness workshops, or cross-promotional opportunities.</p>
-                    
-                    <p>Would you be available for a brief call next week to discuss potential partnership opportunities?</p>
-                    
-                    <p>Best regards,<br>
-                    Dr. Elena Rodriguez<br>
-                    Lead Practitioner<br>
-                    Avicenna Acupuncture<br>
-                    (301) 555-0123<br>
-                    Potomac, MD</p>
-                </div>
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-semibold text-blue-800 mb-2">AI-Generated Context Notes:</h4>
+                        <p class="text-sm text-blue-700">Lead identified through business directory. ${draft.leadCompany} offers complementary services. High potential for partnership or referral arrangement.</p>
+                    </div>
+                `;
                 
-                <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-                    <h4 class="font-semibold text-blue-800 mb-2">AI-Generated Context Notes:</h4>
-                    <p class="text-sm text-blue-700">Lead identified through local business directory. Wellness Center Inc. offers massage therapy, yoga classes, and nutritional counseling. No current acupuncture services detected. High potential for referral partnership.</p>
-                </div>
-            `;
-            
-            document.getElementById('draft-modal').classList.remove('hidden');
+                document.getElementById('draft-modal').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error loading draft:', error);
+                showNotification('Error loading draft', 'error');
+            }
         }
 
         function closeDraftModal() {
@@ -1030,32 +1249,58 @@
             currentDraftId = null;
         }
 
-        function approveDraft() {
+        async function approveDraft() {
             if (!currentDraftId) return;
             
-            alert(`Draft ${currentDraftId} approved and queued for sending`);
-            closeDraftModal();
-            loadDrafts('draft'); // Refresh the list
-            updateStats();
-        }
-
-        function rejectDraft() {
-            if (!currentDraftId) return;
-            
-            if (confirm('Are you sure you want to reject this draft? It will be deleted.')) {
-                alert(`Draft ${currentDraftId} rejected and deleted`);
+            try {
+                await db.collection('drafts').doc(currentDraftId).update({
+                    status: 'approved',
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showNotification('Draft approved and queued for sending', 'success');
                 closeDraftModal();
                 loadDrafts('draft'); // Refresh the list
+                updateStats();
+            } catch (error) {
+                console.error('Error approving draft:', error);
+                showNotification('Error approving draft', 'error');
             }
         }
 
-        function sendDraft() {
+        async function rejectDraft() {
             if (!currentDraftId) return;
             
-            alert(`Draft ${currentDraftId} sent successfully!`);
-            closeDraftModal();
-            loadDrafts('draft'); // Refresh the list
-            updateStats();
+            if (confirm('Are you sure you want to reject this draft? It will be deleted.')) {
+                try {
+                    await db.collection('drafts').doc(currentDraftId).delete();
+                    showNotification('Draft rejected and deleted', 'info');
+                    closeDraftModal();
+                    loadDrafts('draft'); // Refresh the list
+                } catch (error) {
+                    console.error('Error rejecting draft:', error);
+                    showNotification('Error rejecting draft', 'error');
+                }
+            }
+        }
+
+        async function sendDraft() {
+            if (!currentDraftId) return;
+            
+            try {
+                await db.collection('drafts').doc(currentDraftId).update({
+                    status: 'sent',
+                    sentAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showNotification('Draft sent successfully!', 'success');
+                closeDraftModal();
+                loadDrafts('draft'); // Refresh the list
+                updateStats();
+            } catch (error) {
+                console.error('Error sending draft:', error);
+                showNotification('Error sending draft', 'error');
+            }
         }
 
         // Business Profile Wizard Functions
@@ -1099,10 +1344,15 @@
             }
         }
 
-        function saveBusinessProfile() {
+        async function saveBusinessProfile() {
+            if (!currentUser) {
+                showNotification('Please log in to save profiles', 'error');
+                return;
+            }
+            
             const form = document.getElementById('profile-wizard-form');
             if (!form.checkValidity()) {
-                alert('Please fill in all required fields');
+                showNotification('Please fill in all required fields', 'error');
                 return;
             }
             
@@ -1115,18 +1365,49 @@
             });
             
             if (services.length === 0) {
-                alert('Please add at least one service');
+                showNotification('Please add at least one service', 'error');
                 return;
             }
             
-            // In a real app, this would save to the backend
-            alert('Business profile saved successfully!');
-            closeProfileWizard();
-            loadBusinessProfiles();
+            try {
+                const profileData = {
+                    companyName: document.getElementById('profile-company-name').value,
+                    industry: document.getElementById('profile-industry').value,
+                    services: services,
+                    targetCustomers: document.getElementById('profile-target-customers').value,
+                    geography: document.getElementById('profile-geography').value,
+                    valueProposition: document.getElementById('profile-value-prop').value,
+                    offers: document.getElementById('profile-offers').value.split(',').map(o => o.trim()).filter(o => o),
+                    userId: currentUser.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                await db.collection('businessProfiles').add(profileData);
+                
+                showNotification('Business profile saved successfully!', 'success');
+                closeProfileWizard();
+                loadBusinessProfiles();
+            } catch (error) {
+                console.error('Error saving business profile:', error);
+                showNotification('Error saving business profile: ' + error.message, 'error');
+            }
         }
 
-        function editProfile(profileId) {
-            alert(`Edit profile ${profileId} - This would open the profile editor`);
+        async function editProfile(profileId) {
+            showNotification('Edit functionality coming soon!', 'info');
+        }
+
+        async function deleteProfile(profileId) {
+            if (confirm('Are you sure you want to delete this profile?')) {
+                try {
+                    await db.collection('businessProfiles').doc(profileId).delete();
+                    showNotification('Profile deleted successfully', 'info');
+                    loadBusinessProfiles();
+                } catch (error) {
+                    console.error('Error deleting profile:', error);
+                    showNotification('Error deleting profile', 'error');
+                }
+            }
         }
 
         // Website Analysis Functions
@@ -1135,12 +1416,12 @@
             const url = document.getElementById('website-url').value;
             
             if (!url) {
-                alert('Please enter a website URL');
+                showNotification('Please enter a website URL', 'error');
                 return;
             }
             
             // Show loading
-            const button = e.target.querySelector('button[type="submit"]');
+            const button = document.getElementById('analyze-website-button');
             const originalText = button.innerHTML;
             button.innerHTML = '<div class="loading"></div> Analyzing...';
             button.disabled = true;
@@ -1218,7 +1499,8 @@
                 document.getElementById('website-analysis-modal').classList.remove('hidden');
                 
             } catch (error) {
-                alert('Error analyzing website: ' + error.message);
+                console.error('Error analyzing website:', error);
+                showNotification('Error analyzing website: ' + error.message, 'error');
             } finally {
                 button.innerHTML = originalText;
                 button.disabled = false;
@@ -1259,6 +1541,46 @@
             // Close analysis modal and open profile wizard
             closeAnalysisModal();
             showProfileWizard();
+        }
+
+        // Utility Functions
+        function formatFirestoreTimestamp(timestamp) {
+            if (!timestamp) return 'Unknown';
+            if (timestamp.toDate) {
+                return timestamp.toDate().toLocaleDateString();
+            }
+            return new Date(timestamp).toLocaleDateString();
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const icon = document.getElementById('notification-icon');
+            const messageEl = document.getElementById('notification-message');
+            
+            // Set notification content and style
+            messageEl.textContent = message;
+            notification.className = `notification ${type}`;
+            
+            // Set appropriate icon
+            if (type === 'success') {
+                icon.className = 'fas fa-check-circle mr-2';
+            } else if (type === 'error') {
+                icon.className = 'fas fa-exclamation-triangle mr-2';
+            } else {
+                icon.className = 'fas fa-info-circle mr-2';
+            }
+            
+            // Show notification
+            notification.classList.remove('hidden');
+            notification.classList.add('show');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.classList.add('hidden');
+                }, 300);
+            }, 5000);
         }
     </script>
 </body>
