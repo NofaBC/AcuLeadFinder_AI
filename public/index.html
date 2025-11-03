@@ -114,6 +114,70 @@
                 </div>
             </header>
 
+            <!-- Business Profile Management -->
+            <div class="mb-8 bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-building text-blue-600 mr-2"></i>
+                        Business Profile Management
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Website Analysis -->
+                        <div class="border rounded-lg p-4">
+                            <h3 class="font-semibold text-gray-900 mb-3">
+                                <i class="fas fa-globe text-green-600 mr-2"></i>
+                                Quick Website Analysis
+                            </h3>
+                            <form id="website-analysis-form">
+                                <div class="mb-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Business Website URL
+                                    </label>
+                                    <input type="url" id="website-url" required
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                           placeholder="https://example.com">
+                                </div>
+                                <button type="submit" 
+                                        class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200">
+                                    <i class="fas fa-search mr-2"></i>
+                                    Analyze Website
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Manual Profile Creation -->
+                        <div class="border rounded-lg p-4">
+                            <h3 class="font-semibold text-gray-900 mb-3">
+                                <i class="fas fa-edit text-purple-600 mr-2"></i>
+                                Manual Profile Setup
+                            </h3>
+                            <button onclick="showProfileWizard()"
+                                    class="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition duration-200">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                Create Business Profile
+                            </button>
+                            <p class="text-xs text-gray-500 mt-2 text-center">
+                                For businesses without websites or custom needs
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Active Profiles -->
+                    <div class="mt-6">
+                        <h3 class="font-semibold text-gray-900 mb-3">Active Business Profiles</h3>
+                        <div id="business-profiles-list" class="space-y-3">
+                            <div class="text-center text-gray-500 py-4">
+                                <i class="fas fa-building text-3xl mb-2 opacity-50"></i>
+                                <p>No business profiles yet</p>
+                                <p class="text-sm">Create your first profile to enable context-aware lead generation</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Stats Overview -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white rounded-lg shadow p-6">
@@ -178,32 +242,47 @@
                         </div>
                         <div class="p-6">
                             <form id="campaign-form">
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Select Preset
-                                    </label>
-                                    <select id="preset-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="">Loading presets...</option>
-                                    </select>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Select Preset
+                                        </label>
+                                        <select id="preset-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="">Loading presets...</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Business Profile
+                                        </label>
+                                        <select id="business-profile-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="">Select business profile...</option>
+                                            <option value="auto-acu">Auto: Avicenna Acupuncture (AcuLeadFinder)</option>
+                                        </select>
+                                        <p class="text-xs text-gray-500 mt-1">Required for APLeadFinder, optional for AcuLeadFinder</p>
+                                    </div>
                                 </div>
-                                
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        AI Model
-                                    </label>
-                                    <select id="model-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="gpt-4o">GPT-4o (Recommended)</option>
-                                        <option value="gpt-4">GPT-4</option>
-                                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Send Cap Per Run
-                                    </label>
-                                    <input type="number" id="send-cap" value="20" min="1" max="100" 
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            AI Model
+                                        </label>
+                                        <select id="model-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="gpt-4o">GPT-4o (Recommended)</option>
+                                            <option value="gpt-4">GPT-4</option>
+                                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Send Cap Per Run
+                                        </label>
+                                        <input type="number" id="send-cap" value="20" min="1" max="100" 
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
                                 </div>
                                 
                                 <button type="submit" 
@@ -349,11 +428,127 @@
                 </div>
             </div>
         </div>
+
+        <!-- Business Profile Wizard Modal -->
+        <div id="profile-wizard-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Create Business Profile</h3>
+                </div>
+                <div class="p-6 overflow-y-auto max-h-[70vh]">
+                    <form id="profile-wizard-form">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Company Name *
+                                </label>
+                                <input type="text" id="profile-company-name" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="Your Company LLC">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Industry *
+                                </label>
+                                <input type="text" id="profile-industry" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="Digital Marketing, Consulting, etc.">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Core Services *
+                                </label>
+                                <div id="services-container" class="space-y-2">
+                                    <div class="flex space-x-2">
+                                        <input type="text" class="service-input flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Service 1" required>
+                                        <button type="button" onclick="removeService(this)" class="px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="addService()" class="mt-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm">
+                                    <i class="fas fa-plus mr-1"></i> Add Service
+                                </button>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Target Customers
+                                </label>
+                                <input type="text" id="profile-target-customers"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="Small businesses, startups, enterprises">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Geographic Focus
+                                </label>
+                                <input type="text" id="profile-geography"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="National, Local, Specific regions">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Unique Value Proposition
+                                </label>
+                                <textarea id="profile-value-prop" rows="3"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                          placeholder="What makes your business unique?"></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Key Offers/Promotions
+                                </label>
+                                <textarea id="profile-offers" rows="2"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                          placeholder="Free consultation, special discounts, etc."></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
+                    <button onclick="closeProfileWizard()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200">
+                        Cancel
+                    </button>
+                    <button onclick="saveBusinessProfile()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
+                        <i class="fas fa-save mr-2"></i>Save Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Website Analysis Results Modal -->
+        <div id="website-analysis-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Website Analysis Results</h3>
+                </div>
+                <div class="p-6 overflow-y-auto max-h-[70vh]">
+                    <div id="analysis-results" class="space-y-4">
+                        <!-- Results will be loaded here -->
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between">
+                    <button onclick="closeAnalysisModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200">
+                        Close
+                    </button>
+                    <button onclick="useAnalysisResults()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200">
+                        <i class="fas fa-check mr-2"></i>Use This Profile
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         const API_BASE = window.location.origin;
         let currentDraftId = null;
+        let currentAnalysisResults = null;
         let authToken = localStorage.getItem('seekanlg_auth_token');
 
         // Initialize the console
@@ -445,6 +640,7 @@
             loadPresets();
             loadCampaigns();
             loadJobs();
+            loadBusinessProfiles();
             updateStats();
             startAutoRefresh();
         }
@@ -534,6 +730,365 @@
             document.getElementById('emails-sent').textContent = '0';
         }
 
+        // Business Profile Management
+        // Website analysis form
+        document.getElementById('website-analysis-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const websiteUrl = document.getElementById('website-url').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/business/analyze-website`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        website_url: websiteUrl
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showAnalysisResults(data.business_profile);
+                } else {
+                    alert('Error analyzing website');
+                }
+            } catch (error) {
+                console.error('Error analyzing website:', error);
+                alert('Error analyzing website');
+            }
+        });
+
+        function showAnalysisResults(profile) {
+            currentAnalysisResults = profile;
+            
+            const resultsHtml = `
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-green-600 text-xl mr-3"></i>
+                        <div>
+                            <h4 class="font-semibold text-green-900">Website Analysis Complete</h4>
+                            <p class="text-green-700 text-sm">AI has extracted business information from the website</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-2">Company Information</h4>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="text-sm font-medium text-gray-600">Company Name:</label>
+                                <p class="text-gray-900">${profile.company_name || 'Not detected'}</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-600">Industry:</label>
+                                <p class="text-gray-900">${profile.industry || 'Not detected'}</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-600">Geography:</label>
+                                <p class="text-gray-900">${profile.geography || 'Not detected'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-2">Services & Value</h4>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="text-sm font-medium text-gray-600">Services:</label>
+                                <p class="text-gray-900">${Array.isArray(profile.services) ? profile.services.join(', ') : profile.services || 'Not detected'}</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-600">Target Customers:</label>
+                                <p class="text-gray-900">${profile.target_customers || 'Not detected'}</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-600">Value Proposition:</label>
+                                <p class="text-gray-900">${profile.value_proposition || 'Not detected'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Review the extracted information and click "Use This Profile" to save it for your campaigns.
+                    </p>
+                </div>
+            `;
+            
+            document.getElementById('analysis-results').innerHTML = resultsHtml;
+            document.getElementById('website-analysis-modal').classList.remove('hidden');
+        }
+
+        function closeAnalysisModal() {
+            document.getElementById('website-analysis-modal').classList.add('hidden');
+            currentAnalysisResults = null;
+        }
+
+        async function useAnalysisResults() {
+            if (!currentAnalysisResults) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/business/create-profile`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        profile_data: currentAnalysisResults
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Business profile created for ${data.company_name}`);
+                    closeAnalysisModal();
+                    loadBusinessProfiles();
+                    document.getElementById('website-analysis-form').reset();
+                } else {
+                    alert('Error creating business profile');
+                }
+            } catch (error) {
+                console.error('Error creating profile:', error);
+                alert('Error creating business profile');
+            }
+        }
+
+        // Profile Wizard Functions
+        function showProfileWizard() {
+            document.getElementById('profile-wizard-modal').classList.remove('hidden');
+        }
+
+        function closeProfileWizard() {
+            document.getElementById('profile-wizard-modal').classList.add('hidden');
+            document.getElementById('profile-wizard-form').reset();
+            // Reset services to one empty field
+            document.getElementById('services-container').innerHTML = `
+                <div class="flex space-x-2">
+                    <input type="text" class="service-input flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Service 1" required>
+                    <button type="button" onclick="removeService(this)" class="px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        function addService() {
+            const servicesContainer = document.getElementById('services-container');
+            const serviceCount = servicesContainer.children.length + 1;
+            
+            const serviceDiv = document.createElement('div');
+            serviceDiv.className = 'flex space-x-2';
+            serviceDiv.innerHTML = `
+                <input type="text" class="service-input flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Service ${serviceCount}">
+                <button type="button" onclick="removeService(this)" class="px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            servicesContainer.appendChild(serviceDiv);
+        }
+
+        function removeService(button) {
+            if (document.getElementById('services-container').children.length > 1) {
+                button.parentElement.remove();
+            }
+        }
+
+        async function saveBusinessProfile() {
+            const form = document.getElementById('profile-wizard-form');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Collect services
+            const services = Array.from(document.getElementsByClassName('service-input'))
+                .map(input => input.value.trim())
+                .filter(service => service !== '');
+            
+            if (services.length === 0) {
+                alert('Please add at least one service');
+                return;
+            }
+            
+            const profileData = {
+                company_name: document.getElementById('profile-company-name').value,
+                industry: document.getElementById('profile-industry').value,
+                services: services,
+                target_customers: document.getElementById('profile-target-customers').value,
+                geography: document.getElementById('profile-geography').value,
+                value_proposition: document.getElementById('profile-value-prop').value,
+                offers: document.getElementById('profile-offers').value.split('\n').filter(offer => offer.trim() !== '')
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/business/create-profile`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        profile_data: profileData
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Business profile created successfully! ID: ${data.profile_id}`);
+                    closeProfileWizard();
+                    loadBusinessProfiles();
+                } else {
+                    alert('Error creating business profile');
+                }
+            } catch (error) {
+                console.error('Error creating business profile:', error);
+                alert('Error creating business profile');
+            }
+        }
+
+        // Load and display business profiles
+        async function loadBusinessProfiles() {
+            try {
+                const response = await fetch(`${API_BASE}/business/profiles`);
+                const data = await response.json();
+                
+                const profilesList = document.getElementById('business-profiles-list');
+                const profileSelect = document.getElementById('business-profile-select');
+                
+                // Clear existing options except the first one
+                while (profileSelect.children.length > 1) {
+                    profileSelect.removeChild(profileSelect.lastChild);
+                }
+                
+                const profiles = data.profiles || [];
+                
+                // Display profiles
+                if (profiles.length === 0) {
+                    profilesList.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-building text-3xl mb-2 opacity-50"></i>
+                            <p>No business profiles yet</p>
+                            <p class="text-sm">Create your first profile to enable context-aware lead generation</p>
+                        </div>
+                    `;
+                } else {
+                    profilesList.innerHTML = profiles.map(profile => `
+                        <div class="border rounded-lg p-4 hover:shadow-md transition duration-200">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-900">${profile.company_name}</h4>
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${profile.industry}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">Services: ${Array.isArray(profile.services) ? profile.services.join(', ') : profile.services}</p>
+                            <div class="flex justify-between items-center text-xs text-gray-500">
+                                <span>ID: ${profile.profile_id}</span>
+                                <span>Created: ${new Date(profile.created_at).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    // Add to select dropdown
+                    profiles.forEach(profile => {
+                        const option = document.createElement('option');
+                        option.value = profile.profile_id;
+                        option.textContent = `${profile.company_name} (${profile.industry})`;
+                        profileSelect.appendChild(option);
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading business profiles:', error);
+            }
+        }
+
+        // Update campaign form validation
+        document.getElementById('campaign-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const preset = document.getElementById('preset-select').value;
+            const businessProfile = document.getElementById('business-profile-select').value;
+            
+            if (!preset) {
+                alert('Please select a preset');
+                return;
+            }
+            
+            // For APLeadFinder, require business profile
+            if (preset === 'apl' && !businessProfile) {
+                alert('APLeadFinder requires a business profile for context-aware lead generation');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/campaigns`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        preset: preset,
+                        model: document.getElementById('model-select').value,
+                        sendCapPerRun: parseInt(document.getElementById('send-cap').value),
+                        businessProfileId: businessProfile || undefined
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Campaign created successfully! ID: ${data.campaignId}`);
+                    loadCampaigns();
+                    updateStats();
+                    this.reset();
+                } else {
+                    alert('Error creating campaign');
+                }
+            } catch (error) {
+                console.error('Error creating campaign:', error);
+                alert('Error creating campaign');
+            }
+        });
+
+        // Job form handler
+        document.getElementById('job-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const campaignId = document.getElementById('campaign-select').value;
+            const plannedCount = parseInt(document.getElementById('planned-count').value);
+            
+            if (!campaignId) {
+                alert('Please select a campaign');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/jobs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        campaignId: campaignId,
+                        plannedCount: plannedCount
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Job started successfully! ID: ${data.jobId}`);
+                    loadJobs();
+                    updateStats();
+                    this.reset();
+                } else {
+                    alert('Error starting job');
+                }
+            } catch (error) {
+                console.error('Error starting job:', error);
+                alert('Error starting job');
+            }
+        });
+
+        // Draft management functions
         async function loadDrafts(status = 'draft') {
             try {
                 const draftsList = document.getElementById('drafts-list');
@@ -614,7 +1169,7 @@
 
         function viewDraft(draftId) {
             currentDraftId = draftId;
-            const draft = generateMockDrafts('draft')[0]; // In real app, fetch from API
+            const draft = generateMockDrafts('draft')[0];
             document.getElementById('draft-content').innerHTML = `
                 <div>
                     <h4 class="font-semibold text-gray-900 mb-2">Subject:</h4>
@@ -691,88 +1246,13 @@
             }
         }
 
-        // Form handlers
-        document.getElementById('campaign-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const preset = document.getElementById('preset-select').value;
-            
-            if (!preset) {
-                alert('Please select a preset');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/campaigns`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        preset: preset,
-                        model: document.getElementById('model-select').value,
-                        sendCapPerRun: parseInt(document.getElementById('send-cap').value)
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    alert(`Campaign created successfully! ID: ${data.campaignId}`);
-                    loadCampaigns();
-                    updateStats();
-                    this.reset();
-                } else {
-                    alert('Error creating campaign');
-                }
-            } catch (error) {
-                console.error('Error creating campaign:', error);
-                alert('Error creating campaign');
-            }
-        });
-
-        document.getElementById('job-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const campaignId = document.getElementById('campaign-select').value;
-            const plannedCount = parseInt(document.getElementById('planned-count').value);
-            
-            if (!campaignId) {
-                alert('Please select a campaign');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/jobs`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        campaignId: campaignId,
-                        plannedCount: plannedCount
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    alert(`Job started successfully! ID: ${data.jobId}`);
-                    loadJobs();
-                    updateStats();
-                    this.reset();
-                } else {
-                    alert('Error starting job');
-                }
-            } catch (error) {
-                console.error('Error starting job:', error);
-                alert('Error starting job');
-            }
-        });
-
         function startAutoRefresh() {
             setInterval(() => {
                 loadCampaigns();
                 loadJobs();
+                loadBusinessProfiles();
                 updateStats();
-            }, 30000); // Refresh every 30 seconds
+            }, 30000);
         }
     </script>
 </body>
