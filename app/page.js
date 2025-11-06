@@ -1,12 +1,15 @@
 // app/page.js
 'use client';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import ProfileManager from '../components/ProfileManager';
 
 export default function Home() {
   const [inputText, setInputText] = useState('');
   const [analysis, setAnalysis] = useState('');
   const [loading, setLoading] = useState(false);
   const [analysisType, setAnalysisType] = useState('qualification');
+  const { currentUser } = useAuth();
 
   const analyzeLead = async () => {
     if (!inputText.trim()) {
@@ -46,14 +49,19 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             ACU Lead Finder AI
           </h1>
           <p className="text-gray-600">
-            AI-powered lead analysis and qualification
+            AI-powered lead analysis and qualification with profile saving
           </p>
+          {currentUser && (
+            <p className="text-sm text-green-600 mt-2">
+              ✅ Ready to save profiles (User: {currentUser.uid.slice(0, 8)}...)
+            </p>
+          )}
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
@@ -103,7 +111,7 @@ export default function Home() {
         </div>
 
         {analysis && (
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               Analysis Results
             </h2>
@@ -115,26 +123,12 @@ export default function Home() {
           </div>
         )}
 
-        {/* Features Section */}
-        <div className="grid md:grid-cols-3 gap-6 mt-8">
-          <div className="bg-white rounded-xl shadow-md p-6 text-center">
-            <div className="text-blue-600 text-2xl mb-2">🔍</div>
-            <h3 className="font-semibold text-gray-800 mb-2">Lead Qualification</h3>
-            <p className="text-gray-600 text-sm">Automatically qualify leads based on intent and fit</p>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-6 text-center">
-            <div className="text-green-600 text-2xl mb-2">📊</div>
-            <h3 className="font-semibold text-gray-800 mb-2">Scoring & Ranking</h3>
-            <p className="text-gray-600 text-sm">Score leads by potential and priority</p>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-6 text-center">
-            <div className="text-purple-600 text-2xl mb-2">💡</div>
-            <h3 className="font-semibold text-gray-800 mb-2">Actionable Insights</h3>
-            <p className="text-gray-600 text-sm">Get specific follow-up recommendations</p>
-          </div>
-        </div>
+        {/* Profile Manager */}
+        <ProfileManager 
+          currentAnalysis={analysis}
+          currentLeadData={inputText}
+          analysisType={analysisType}
+        />
       </div>
     </div>
   );
