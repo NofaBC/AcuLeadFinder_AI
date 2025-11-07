@@ -18,12 +18,6 @@ const nextConfig = {
       exprContextCritical: false,
     };
 
-    // Exclude undici from parsing if needed
-    config.module.rules.push({
-      test: /node_modules\/undici\/.*\.js$/,
-      loader: 'ignore-loader'
-    });
-
     return config;
   },
 }
