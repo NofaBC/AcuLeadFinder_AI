@@ -1,8 +1,6 @@
-// contexts/AuthContext.js
+// contexts/AuthContext.js - No Firebase version
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '../lib/firebase';
-import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 
 const AuthContext = createContext();
 
@@ -12,34 +10,21 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Set to false since no auth
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        // Auto-signin anonymously if no user
-        try {
-          await signInAnonymously(auth);
-        } catch (error) {
-          console.error('Auto-signin failed:', error);
-        }
-      } else {
-        setCurrentUser(user);
-      }
-      setLoading(false);
-    });
-
-    return unsubscribe;
+    // No Firebase auth - just set a demo user immediately
+    setCurrentUser({ uid: 'demo-user', email: 'demo@avicennamedicine.com' });
   }, []);
 
   const value = {
     currentUser,
-    loading
+    loading: false
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }
