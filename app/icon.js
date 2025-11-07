@@ -13,7 +13,7 @@ export default function Icon() {
     (
       <div
         style={{
-          fontSize: 24,
+          fontSize: 20,
           background: 'linear-gradient(135deg, #10B981, #059669)',
           width: '100%',
           height: '100%',
@@ -21,8 +21,9 @@ export default function Icon() {
           alignItems: 'center',
           justifyContent: 'center',
           color: 'white',
-          borderRadius: '8px',
+          borderRadius: '6px',
           fontWeight: 'bold',
+          fontFamily: 'system-ui, sans-serif',
         }}
       >
         AM
